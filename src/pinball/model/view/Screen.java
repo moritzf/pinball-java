@@ -1,5 +1,5 @@
 package pinball.model.view;
 
 public enum Screen {
-	MENU, GAME
+    MENU, GAME, HIGHSCORE, CREDITS
 }
