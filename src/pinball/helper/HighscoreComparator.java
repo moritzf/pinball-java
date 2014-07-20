@@ -7,7 +7,7 @@ public class HighscoreComparator implements Comparator<Object[]> {
     public int compare(Object[] array1, Object[] array2) {
 	// get the second element of each array, andtransform it into a Double
 	Integer d1 = new Integer((int) array1[1]);
-	Integer d2 = new Integer((int) array2[2]);
+	Integer d2 = new Integer((int) array2[1]);
 	// since you want a descending order, you need to negate the
 	// comparison of the double
 	return -d1.compareTo(d2);

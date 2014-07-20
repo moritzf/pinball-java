@@ -13,7 +13,7 @@ import pinball.helper.HighscoreComparator;
  *
  */
 public class PinballModel extends AbstractTableModel implements
-	PinballModelInterface {
+PinballModelInterface {
     private ArrayList<Object[]> highscoreData;
     private int currentHighscore;
     private String currentPlayer;
@@ -21,10 +21,6 @@ public class PinballModel extends AbstractTableModel implements
 
     public PinballModel() {
 	highscoreData = new ArrayList<Object[]>();
-	currentHighscore = 500;
-	currentPlayer = "Moritz";
-	addHighscore();
-	sortHighscoreList();
     }
 
     @Override
@@ -36,6 +32,7 @@ public class PinballModel extends AbstractTableModel implements
     @Override
     public void stopGame() {
 	addHighscore();
+	fireTableDataChanged();
     }
 
     @Override

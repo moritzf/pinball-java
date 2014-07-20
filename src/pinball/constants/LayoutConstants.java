@@ -22,7 +22,7 @@ public interface LayoutConstants {
     public static final int RETURN_BUTTON_TO_TABLE_DISPLACEMENT = 230;
     public static final int TABLE_WIDTH = 600;
     public static final int TABLE_HEIGHT = 800;
-    public static final int RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT = 100;
+    public static final int RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT = 50;
 
     // Return button
     public static final int RETURN_BUTTON_TO_LEFT_DISPLACEMENT = 40;
