@@ -15,4 +15,5 @@ public interface ImageConstants {
     public static final String HIGHSCORE_LOGO = "images/highscore-logo.png";
     public static final String BACK_BUTTON = "images/return-button.png";
     public static final String DIALOG_BALL = "images/dialog-ball.png";
+    public static final String PLACEHOLDER_GAME_SCREEN = "images/game-screen-mock.png";
 }

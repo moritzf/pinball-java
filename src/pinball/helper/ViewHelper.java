@@ -2,8 +2,6 @@ package pinball.helper;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -11,6 +9,9 @@ import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import org.imgscalr.Scalr;
+import org.imgscalr.Scalr.Method;
 
 import pinball.constants.LayoutConstants;
 import pinball.view.PinballView;
@@ -97,9 +98,7 @@ public class ViewHelper implements LayoutConstants {
     }
 
     /**
-     * Scales image. Source:
-     * http://stackoverflow.com/questions/4257497/how-to-cast
-     * -convert-a-bufferedimage-into-an-image
+     * Scales image.
      *
      * @param originalImage
      * @param scaledWidth
@@ -109,15 +108,9 @@ public class ViewHelper implements LayoutConstants {
      */
     public static BufferedImage createResizedCopy(BufferedImage originalImage,
 	    int scaledWidth, int scaledHeight, boolean preserveAlpha) {
-
-	BufferedImage after = new BufferedImage(scaledWidth, scaledHeight,
-		BufferedImage.TYPE_INT_ARGB);
-	AffineTransform at = new AffineTransform();
-	at.scale(SCALING_FACTOR, SCALING_FACTOR);
-	AffineTransformOp scaleOp = new AffineTransformOp(at,
-		AffineTransformOp.TYPE_BILINEAR);
-	after = scaleOp.filter(originalImage, after);
-	return after;
+	originalImage = Scalr.resize(originalImage, Method.ULTRA_QUALITY,
+		scaledWidth, scaledHeight);
+	return originalImage;
     }
 
     /**

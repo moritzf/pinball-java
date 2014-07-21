@@ -12,7 +12,7 @@ public interface LayoutConstants {
     public static final int BUTTON_DISPLACEMENT = 50;
     public static final int BUTTON_TO_LOGO_DISPLACEMENT = 150;
     public static final int LOGO_TO_TOP_DISPLACEMENT = 85;
-    public static final int BUTTON_TO_BALL_DISPLACEMENT = 50;
+    public static final int BUTTON_TO_BALL_DISPLACEMENT = 100;
     public static final int RIGHT_TO_BALL_DISPLACEMENT = 200;
 
     // Credits
@@ -27,6 +27,7 @@ public interface LayoutConstants {
     // Return button
     public static final int RETURN_BUTTON_TO_LEFT_DISPLACEMENT = 40;
     public static final int RETURN_BUTTON_TO_TOP_DISPLACEMENT = 40;
+    public static final int RETURN_BUTTON_TO_TOP_GAME_SCREEN = 315;
 
     // Panels
     public static final String GAME = "Game";

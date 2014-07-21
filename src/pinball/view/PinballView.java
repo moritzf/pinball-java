@@ -1,6 +1,5 @@
 package pinball.view;
 
-import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.CardLayout;
 import java.awt.Dimension;
@@ -31,7 +30,7 @@ import pinball.model.PinballModelInterface;
  * Responsible for the appearance of the application.
  */
 public class PinballView extends JFrame implements LayoutConstants,
-ImageConstants, TextConstants {
+	ImageConstants, TextConstants {
 
     // Menu panel items
     private JLabel logo;
@@ -53,6 +52,7 @@ ImageConstants, TextConstants {
     // Game panel items
     private Canvas canvas;
     private JButton game_to_menu;
+    private JLabel placeholder;
 
     // Panels
     private JPanel menuPanel;
@@ -85,11 +85,9 @@ ImageConstants, TextConstants {
 		| IllegalAccessException | UnsupportedLookAndFeelException e) {
 	    e.printStackTrace();
 	}
-	// Set window size
-	setSize(new Dimension((int) (APP_WIDTH * SCALING_FACTOR),
-		(int) (APP_HEIGHT * SCALING_FACTOR)));
 	// Set name
 	setTitle("Pinball");
+
 	// Exit window on close
 	setDefaultCloseOperation(EXIT_ON_CLOSE);
 
@@ -143,7 +141,7 @@ ImageConstants, TextConstants {
 	ViewHelper.setBounds(credits_text, RETURN_BUTTON_TO_TEXT_DISPLACEMENT
 		+ RETURN_BUTTON_TO_LEFT_DISPLACEMENT
 		+ (int) ViewHelper.imageSize(credits_to_menu.getIcon())
-		.getWidth(), RETURN_BUTTON_TO_TOP_DISPLACEMENT
+			.getWidth(), RETURN_BUTTON_TO_TOP_DISPLACEMENT
 		+ credits_to_menu.getHeight() / 2);
 
 	// Populate credits panel;
@@ -156,11 +154,11 @@ ImageConstants, TextConstants {
 	highscore_scores = new JTable((TableModel) model);
 	scrollPane = new JScrollPane(highscore_scores);
 	ViewHelper
-	.setBounds(
-		scrollPane,
-		(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
-		(RETURN_BUTTON_TO_TOP_DISPLACEMENT
-			+ highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
+		.setBounds(
+			scrollPane,
+			(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
+			(RETURN_BUTTON_TO_TOP_DISPLACEMENT
+				+ highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
 			TABLE_WIDTH, TABLE_HEIGHT);
 	highscore_logo = new JLabel(ViewHelper.createImageIcon(HIGHSCORE_LOGO));
 	ViewHelper.setBounds(highscore_logo,
@@ -176,13 +174,19 @@ ImageConstants, TextConstants {
 
 	// Instantiate game panel items
 	game_to_menu = createBackButton(game_to_menu);
+	ViewHelper.setBounds(game_to_menu, RETURN_BUTTON_TO_LEFT_DISPLACEMENT,
+		RETURN_BUTTON_TO_TOP_GAME_SCREEN);
 	game_to_menu.addActionListener(e -> {
 	    controller.stopGame();
 	});
+	placeholder = new JLabel(
+		ViewHelper.createImageIcon(PLACEHOLDER_GAME_SCREEN));
+	ViewHelper.setBounds(placeholder, 0, 0, 800, 1280);
 
 	// Populate game panel
 	gamePanel = new JPanel(null);
 	gamePanel.add(game_to_menu);
+	gamePanel.add(placeholder);
 
 	// Set up card layout
 	cards = new JPanel(new CardLayout());
@@ -190,12 +194,18 @@ ImageConstants, TextConstants {
 	cards.add(creditsPanel, CREDITS);
 	cards.add(highscorePanel, HIGHSCORE);
 	cards.add(gamePanel, GAME);
-	add(cards, BorderLayout.CENTER);
+	add(cards);
 
 	// Set visible
 	setVisible(true);
 	// Don't allow resize
-	setResizable(false);
+	setResizable(true);
+
+	// Set window size
+	setSize(new Dimension((int) (APP_WIDTH * SCALING_FACTOR)
+		+ getInsets().right + getInsets().left,
+		(int) (APP_HEIGHT * SCALING_FACTOR) + getInsets().top
+			+ getInsets().bottom));
     }
 
     /**
