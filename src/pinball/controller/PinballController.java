@@ -3,6 +3,10 @@ package pinball.controller;
 import pinball.model.PinballModelInterface;
 import pinball.view.PinballView;
 
+/*
+ * XXX Implement game interaction
+ * XXX Validate Player name
+ */
 public class PinballController implements PinballControllerInterface {
     // References
     PinballModelInterface model;

@@ -29,8 +29,17 @@ import pinball.model.PinballModelInterface;
 /**
  * Responsible for the appearance of the application.
  */
+/*
+ * XXX Implement pause menu
+ * XXX Implement game scoring
+ * XXX Implement game messages
+ * XXX Notify user that high score was saved
+ * XXX Ask user for file location for score database if nonexistent
+ * XXX Create game bodies
+ */
+// XXX Implement game
 public class PinballView extends JFrame implements LayoutConstants,
-	ImageConstants, TextConstants {
+ImageConstants, TextConstants {
 
     // Menu panel items
     private JLabel logo;
@@ -141,7 +150,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	ViewHelper.setBounds(credits_text, RETURN_BUTTON_TO_TEXT_DISPLACEMENT
 		+ RETURN_BUTTON_TO_LEFT_DISPLACEMENT
 		+ (int) ViewHelper.imageSize(credits_to_menu.getIcon())
-			.getWidth(), RETURN_BUTTON_TO_TOP_DISPLACEMENT
+		.getWidth(), RETURN_BUTTON_TO_TOP_DISPLACEMENT
 		+ credits_to_menu.getHeight() / 2);
 
 	// Populate credits panel;
@@ -154,11 +163,11 @@ public class PinballView extends JFrame implements LayoutConstants,
 	highscore_scores = new JTable((TableModel) model);
 	scrollPane = new JScrollPane(highscore_scores);
 	ViewHelper
-		.setBounds(
-			scrollPane,
-			(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
-			(RETURN_BUTTON_TO_TOP_DISPLACEMENT
-				+ highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
+	.setBounds(
+		scrollPane,
+		(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
+		(RETURN_BUTTON_TO_TOP_DISPLACEMENT
+			+ highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
 			TABLE_WIDTH, TABLE_HEIGHT);
 	highscore_logo = new JLabel(ViewHelper.createImageIcon(HIGHSCORE_LOGO));
 	ViewHelper.setBounds(highscore_logo,
@@ -205,7 +214,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	setSize(new Dimension((int) (APP_WIDTH * SCALING_FACTOR)
 		+ getInsets().right + getInsets().left,
 		(int) (APP_HEIGHT * SCALING_FACTOR) + getInsets().top
-			+ getInsets().bottom));
+		+ getInsets().bottom));
     }
 
     /**

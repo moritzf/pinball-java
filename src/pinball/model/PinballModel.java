@@ -10,8 +10,10 @@ import javax.swing.table.AbstractTableModel;
 import pinball.helper.HighscoreComparator;
 
 /**
- *
+ * Responsible for handling the database of scores, the world and the state of
+ * the game.
  */
+// XXX Hook up score database to external file
 public class PinballModel extends AbstractTableModel implements
 PinballModelInterface {
     private ArrayList<Object[]> highscoreData;
