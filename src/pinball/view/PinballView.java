@@ -30,7 +30,9 @@ import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Capsule;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Convex;
+import org.dyn4j.geometry.Geometry;
 import org.dyn4j.geometry.Mass;
+import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Rectangle;
 import org.dyn4j.geometry.Vector2;
 
@@ -54,7 +56,7 @@ import pinball.model.PinballModelInterface;
  */
 // XXX Implement game
 public class PinballView extends JFrame implements LayoutConstants,
-	ImageConstants, TextConstants, ConversionConstants {
+ImageConstants, TextConstants, ConversionConstants {
 
   // Menu panel items
   private JLabel logo;
@@ -154,7 +156,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	});
 	menu_big_ball = new JLabel(ViewHelper.createImageIcon(MENU_BIG_BALL));
 	menu_big_ball
-		.setPreferredSize(ViewHelper.imageSize(menu_big_ball.getIcon()));
+	.setPreferredSize(ViewHelper.imageSize(menu_big_ball.getIcon()));
 	highscore = new JButton(ViewHelper.createImageIcon(HIGHSCORE_BUTTON));
 	highscore.setPreferredSize(ViewHelper.imageSize(highscore.getIcon()));
 	highscore.addActionListener(e -> {
@@ -182,7 +184,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	credits_text = new JLabel(CREDITS_TEXT);
 	ViewHelper.setBounds(credits_text,
 		RETURN_BUTTON_TO_TEXT_DISPLACEMENT + RETURN_BUTTON_TO_LEFT_DISPLACEMENT
-			+ (int) ViewHelper.imageSize(credits_to_menu.getIcon()).getWidth(),
+		+ (int) ViewHelper.imageSize(credits_to_menu.getIcon()).getWidth(),
 		RETURN_BUTTON_TO_TOP_DISPLACEMENT + credits_to_menu.getHeight() / 2);
 
 	// Populate credits panel;
@@ -195,16 +197,16 @@ public class PinballView extends JFrame implements LayoutConstants,
 	highscore_scores = new JTable((TableModel) model);
 	scrollPane = new JScrollPane(highscore_scores);
 	ViewHelper
-		.setBounds(
-			scrollPane,
-			(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
-			(RETURN_BUTTON_TO_TOP_DISPLACEMENT + highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
-			TABLE_WIDTH, TABLE_HEIGHT);
+	.setBounds(
+		scrollPane,
+		(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
+		(RETURN_BUTTON_TO_TOP_DISPLACEMENT + highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
+		TABLE_WIDTH, TABLE_HEIGHT);
 	highscore_logo = new JLabel(ViewHelper.createImageIcon(HIGHSCORE_LOGO));
 	ViewHelper.setBounds(highscore_logo, (int) ((APP_WIDTH / 2) - (ViewHelper
 		.imageSize(HIGHSCORE_LOGO).getWidth() / 2)),
 		RETURN_BUTTON_TO_TOP_DISPLACEMENT
-			+ RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT);
+		+ RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT);
 
 	// Populate highscore panel
 	highscorePanel = new JPanel(null);
@@ -251,7 +253,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	setSize(new Dimension((int) (APP_WIDTH * SCALING_FACTOR)
 		+ getInsets().right + getInsets().left,
 		(int) (APP_HEIGHT * SCALING_FACTOR) + getInsets().top
-			+ getInsets().bottom));
+		+ getInsets().bottom));
   }
 
   /**
@@ -262,7 +264,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 
 	// before we render everything im going to flip the y axis and move the
 	// origin to the center (instead of it being in the top left corner)
-
+	;
 	render(g);
 	// dispose of the graphics object
 	g.dispose();
@@ -385,20 +387,8 @@ public class PinballView extends JFrame implements LayoutConstants,
 	floor.addFixture(new BodyFixture(floorRect));
 	floor.setMass(Mass.Type.INFINITE);
 	// move the floor down a bit
-	floor.translate(0.0, -4.0);
+	floor.translate(0.0, -8.0);
 	world.addBody(floor);
-
-	// // create a triangle object
-	// Triangle triShape =
-	// new Triangle(new Vector2(0.0, 0.5), new Vector2(-0.5, -0.5),
-	// new Vector2(0.5, -0.5));
-	// GameObject triangle = new GameObject();
-	// triangle.addFixture(triShape);
-	// triangle.setMass();
-	// triangle.translate(-1.0, 2.0);
-	// // test having a velocity
-	// triangle.getLinearVelocity().set(5.0, 0.0);
-	// world.addBody(triangle);
 
 	// create a circle
 	Circle cirShape = new Circle(0.5);
@@ -412,24 +402,24 @@ public class PinballView extends JFrame implements LayoutConstants,
 	circle.setLinearDamping(0.05);
 	world.addBody(circle);
 
-	// // try a rectangle
-	// Rectangle rectShape = new Rectangle(1.0, 1.0);
-	// GameObject rectangle = new GameObject();
-	// rectangle.addFixture(rectShape);
-	// rectangle.setMass();
-	// rectangle.translate(0.0, 2.0);
-	// rectangle.getLinearVelocity().set(-5.0, 0.0);
-	// world.addBody(rectangle);
+	// try a rectangle
+	Rectangle rectShape = new Rectangle(1.0, 1.0);
+	GameObject rectangle = new GameObject();
+	rectangle.addFixture(rectShape);
+	rectangle.setMass();
+	rectangle.translate(0.0, 2.0);
+	rectangle.getLinearVelocity().set(-5.0, 0.0);
+	world.addBody(rectangle);
 
-	// // try a polygon with lots of vertices
-	// Polygon polyShape = Geometry.createUnitCirclePolygon(10, 1.0);
-	// GameObject polygon = new GameObject();
-	// polygon.addFixture(polyShape);
-	// polygon.setMass();
-	// polygon.translate(-2.5, 2.0);
-	// // set the angular velocity
-	// polygon.setAngularVelocity(Math.toRadians(-20.0));
-	// world.addBody(polygon);
+	// try a polygon with lots of vertices
+	Polygon polyShape = Geometry.createUnitCirclePolygon(10, 1.0);
+	GameObject polygon = new GameObject();
+	polygon.addFixture(polyShape);
+	polygon.setMass();
+	polygon.translate(-2.5, 2.0);
+	// set the angular velocity
+	polygon.setAngularVelocity(Math.toRadians(-20.0));
+	world.addBody(polygon);
 
 	// try a compound object
 	Circle c1 = new Circle(0.5);
@@ -450,30 +440,29 @@ public class PinballView extends JFrame implements LayoutConstants,
 	capsule.translate(0.0, 4.0);
 	world.addBody(capsule);
 
-	// GameObject issTri = new GameObject();
-	// issTri.addFixture(Geometry.createIsoscelesTriangle(1.0, 3.0));
-	// issTri.setMass();
-	// issTri.translate(2.0, 3.0);
-	// world.addBody(issTri);
-	//
-	// GameObject equTri = new GameObject();
-	// equTri.addFixture(Geometry.createEquilateralTriangle(2.0));
-	// equTri.setMass();
-	// equTri.translate(3.0, 3.0);
-	// world.addBody(equTri);
-	//
-	// GameObject rightTri = new GameObject();
-	// rightTri.addFixture(Geometry.createRightTriangle(2.0, 1.0));
-	// rightTri.setMass();
-	// rightTri.translate(4.0, 3.0);
-	// world.addBody(rightTri);
+	GameObject issTri = new GameObject();
+	issTri.addFixture(Geometry.createIsoscelesTriangle(1.0, 3.0));
+	issTri.setMass();
+	issTri.translate(2.0, 3.0);
+	world.addBody(issTri);
+
+	GameObject equTri = new GameObject();
+	equTri.addFixture(Geometry.createEquilateralTriangle(2.0));
+	equTri.setMass();
+	equTri.translate(3.0, 3.0);
+	world.addBody(equTri);
+
+	GameObject rightTri = new GameObject();
+	rightTri.addFixture(Geometry.createRightTriangle(2.0, 1.0));
+	rightTri.setMass();
+	rightTri.translate(4.0, 3.0);
+	world.addBody(rightTri);
 
 	GameObject cap1 = new GameObject();
 	cap1.addFixture(new Capsule(1.0, 0.5));
 	cap1.setMass();
 	cap1.translate(-3.0, 3.0);
 	world.addBody(cap1);
-
 	GameObject leftWall = new GameObject();
 	leftWall.addFixture(new Rectangle(0.1, 12.8));
 	leftWall.translate(0.0, -6.4);
