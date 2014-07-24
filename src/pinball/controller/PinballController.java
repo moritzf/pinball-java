@@ -1,31 +1,43 @@
 package pinball.controller;
 
+import javax.swing.JOptionPane;
+
 import pinball.model.PinballModelInterface;
 import pinball.view.PinballView;
 
 /*
  * XXX Implement game interaction
- * XXX Validate Player name
  */
 public class PinballController implements PinballControllerInterface {
-    // References
-    PinballModelInterface model;
-    PinballView view;
+  // References
+  PinballModelInterface model;
+  PinballView view;
 
-    public PinballController(PinballModelInterface model) {
+  public PinballController(PinballModelInterface model) {
 	this.model = model;
-	this.view = new PinballView(this, model);
+	view = new PinballView(this, model);
 	view.createView();
-    }
+	model.initDatabase();
+  }
 
-    @Override
-    public void startGame(String name) {
-	model.startGame(name);
-    }
+  @Override
+  public void startGame(String playerName) {
+	model.setPlayerName(playerName);
+	model.setRunning(true);
+  }
 
-    @Override
-    public void stopGame() {
-	model.stopGame();
-    }
+  @Override
+  public boolean isRunning() {
+	return model.isRunning();
+  }
+
+  @Override
+  public void stopGame(int responseSaveHighscore) {
+	if (responseSaveHighscore == JOptionPane.YES_OPTION) {
+	  model.saveHighscore();
+	}
+	model.setRunning(false);
+	model.clearCurrentPlayerData();
+  }
 
 }
