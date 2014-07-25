@@ -10,6 +10,7 @@ import javax.swing.Box;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import org.dyn4j.geometry.Vector2;
 import org.imgscalr.Scalr;
 import org.imgscalr.Scalr.Method;
 
@@ -154,6 +155,13 @@ public class ViewHelper implements LayoutConstants {
 	} catch (IOException e) {
 	  return null;
 	}
+  }
+
+  /**
+   * Computes the centroid of the triangle
+   */
+  public static final double getCentroidY(Vector2[] v) {
+	return (v[0].y + v[1].y + v[2].y) / 3;
   }
 
 }

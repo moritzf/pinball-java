@@ -27,13 +27,13 @@ import javax.swing.table.TableModel;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Capsule;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Geometry;
 import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Rectangle;
+import org.dyn4j.geometry.Triangle;
 import org.dyn4j.geometry.Vector2;
 
 import pinball.constants.ConversionConstants;
@@ -56,7 +56,7 @@ import pinball.model.PinballModelInterface;
  */
 // XXX Implement game
 public class PinballView extends JFrame implements LayoutConstants,
-ImageConstants, TextConstants, ConversionConstants {
+	ImageConstants, TextConstants, ConversionConstants {
 
   // Menu panel items
   private JLabel logo;
@@ -158,7 +158,7 @@ ImageConstants, TextConstants, ConversionConstants {
 	});
 	menu_big_ball = new JLabel(ViewHelper.createImageIcon(MENU_BIG_BALL));
 	menu_big_ball
-	.setPreferredSize(ViewHelper.imageSize(menu_big_ball.getIcon()));
+		.setPreferredSize(ViewHelper.imageSize(menu_big_ball.getIcon()));
 	highscore = new JButton(ViewHelper.createImageIcon(HIGHSCORE_BUTTON));
 	highscore.setPreferredSize(ViewHelper.imageSize(highscore.getIcon()));
 	highscore.addActionListener(e -> {
@@ -186,7 +186,7 @@ ImageConstants, TextConstants, ConversionConstants {
 	credits_text = new JLabel(CREDITS_TEXT);
 	ViewHelper.setBounds(credits_text,
 		RETURN_BUTTON_TO_TEXT_DISPLACEMENT + RETURN_BUTTON_TO_LEFT_DISPLACEMENT
-		+ (int) ViewHelper.imageSize(credits_to_menu.getIcon()).getWidth(),
+			+ (int) ViewHelper.imageSize(credits_to_menu.getIcon()).getWidth(),
 		RETURN_BUTTON_TO_TOP_DISPLACEMENT + credits_to_menu.getHeight() / 2);
 
 	// Populate credits panel;
@@ -199,16 +199,16 @@ ImageConstants, TextConstants, ConversionConstants {
 	highscore_scores = new JTable((TableModel) model);
 	scrollPane = new JScrollPane(highscore_scores);
 	ViewHelper
-	.setBounds(
-		scrollPane,
-		(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
-		(RETURN_BUTTON_TO_TOP_DISPLACEMENT + highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
-		TABLE_WIDTH, TABLE_HEIGHT);
+		.setBounds(
+			scrollPane,
+			(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
+			(RETURN_BUTTON_TO_TOP_DISPLACEMENT + highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
+			TABLE_WIDTH, TABLE_HEIGHT);
 	highscore_logo = new JLabel(ViewHelper.createImageIcon(HIGHSCORE_LOGO));
 	ViewHelper.setBounds(highscore_logo, (int) ((APP_WIDTH / 2) - (ViewHelper
 		.imageSize(HIGHSCORE_LOGO).getWidth() / 2)),
 		RETURN_BUTTON_TO_TOP_DISPLACEMENT
-		+ RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT);
+			+ RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT);
 
 	// Populate highscore panel
 	highscorePanel = new JPanel(null);
@@ -260,7 +260,7 @@ ImageConstants, TextConstants, ConversionConstants {
 	setSize(new Dimension((int) (APP_WIDTH * SCALING_FACTOR)
 		+ getInsets().right + getInsets().left,
 		(int) (APP_HEIGHT * SCALING_FACTOR) + getInsets().top
-		+ getInsets().bottom));
+			+ getInsets().bottom));
   }
 
   /**
@@ -384,16 +384,24 @@ ImageConstants, TextConstants, ConversionConstants {
 	// create the world
 	world = new World();
 
-	// create all your bodies/joints
+	// left wall
+	Triangle t1 =
+		Geometry
+			.createRightTriangle(2.03 * PHYSICS_SCALE, 4.28 * PHYSICS_SCALE);
+	GameObject w1 = new GameObject();
+	w1.addFixture(new BodyFixture(t1));
+	w1.setMass(Mass.Type.INFINITE);
+	t1.translate((2.03 * PHYSICS_SCALE) / 3,
+		-(((2 * (4.28 * PHYSICS_SCALE)) / 3)));
+	world.addBody(w1);
 
-	// create the floor
-	Rectangle floorRect = new Rectangle(15.0, 1.0);
-	GameObject floor = new GameObject();
-	floor.addFixture(new BodyFixture(floorRect));
-	floor.setMass(Mass.Type.INFINITE);
-	// move the floor down a bit
-	floor.translate(0.0, -8.0);
-	world.addBody(floor);
+	Rectangle r1 = new Rectangle((2.03 * PHYSICS_SCALE), (1.2 * PHYSICS_SCALE));
+	GameObject w2 = new GameObject();
+	w2.addFixture(r1);
+	w2.setMass(Mass.Type.INFINITE);
+	r1.translate((2.03 * PHYSICS_SCALE) / 2,
+		-((4.28 * PHYSICS_SCALE) + ((1.2 * PHYSICS_SCALE) / 2)));
+	world.addBody(w2);
 
 	// create a circle
 	Circle cirShape = new Circle(0.5);
@@ -463,15 +471,6 @@ ImageConstants, TextConstants, ConversionConstants {
 	rightTri.translate(4.0, 3.0);
 	world.addBody(rightTri);
 
-	GameObject cap1 = new GameObject();
-	cap1.addFixture(new Capsule(1.0, 0.5));
-	cap1.setMass();
-	cap1.translate(-3.0, 3.0);
-	world.addBody(cap1);
-	GameObject leftWall = new GameObject();
-	leftWall.addFixture(new Rectangle(0.1, 12.8));
-	leftWall.translate(0.0, -6.4);
-	world.addBody(leftWall);
   }
 
   /**
