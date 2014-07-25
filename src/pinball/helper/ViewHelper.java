@@ -107,7 +107,8 @@ public class ViewHelper implements LayoutConstants {
   public static BufferedImage createResizedCopy(BufferedImage originalImage,
 	  int scaledWidth, int scaledHeight, boolean preserveAlpha) {
 	originalImage =
-		Scalr.resize(originalImage, Method.BALANCED, scaledWidth, scaledHeight);
+		Scalr.resize(originalImage, Method.ULTRA_QUALITY, scaledWidth,
+			scaledHeight);
 	return originalImage;
   }
 
@@ -121,7 +122,7 @@ public class ViewHelper implements LayoutConstants {
   public static void setBounds(Component component, int x, int y) {
 	component.setBounds((int) (x * SCALING_FACTOR), (int) (y * SCALING_FACTOR),
 		(int) component.getMaximumSize().getWidth(), (int) component
-		.getMaximumSize().getHeight());
+			.getMaximumSize().getHeight());
   }
 
   /**
@@ -141,7 +142,7 @@ public class ViewHelper implements LayoutConstants {
 
   /**
    * Creates a buffered image from the given file path
-   * 
+   *
    * @param pathOnClasspath
    *          file to image on Classpath
    * @return BufferedImage

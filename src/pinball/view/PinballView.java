@@ -80,6 +80,7 @@ ImageConstants, TextConstants, ConversionConstants {
   private JButton game_to_menu;
   private JLabel placeholder;
   private World world;
+  JLabel button_transparent;
 
   // Panels
   private JPanel menuPanel;
@@ -128,9 +129,10 @@ ImageConstants, TextConstants, ConversionConstants {
 	play = new JButton(ViewHelper.createImageIcon(PLAY_BUTTON));
 	play.setPreferredSize(ViewHelper.imageSize(play.getIcon()));
 	play.addActionListener(e -> {
-	  controller.startGame((String) (JOptionPane.showInputDialog(this,
-		  "Please enter your player name!", "Player Name", DO_NOTHING_ON_CLOSE,
-		  ViewHelper.createImageIcon(DIALOG_BALL), null, null)));
+	  // controller.startGame((String) (JOptionPane.showInputDialog(this,
+	  // "Please enter your player name!", "Player Name", DO_NOTHING_ON_CLOSE,
+	  // ViewHelper.createImageIcon(DIALOG_BALL), null, null)));
+	  controller.startGame("Test"); // DEBUG
 	  last = System.nanoTime();
 	  canvas.setIgnoreRepaint(true);
 	  canvas.createBufferStrategy(2);
@@ -223,18 +225,23 @@ ImageConstants, TextConstants, ConversionConstants {
 		  "Do you want to save your \nhighscore.", "Highscore",
 		  DO_NOTHING_ON_CLOSE, JOptionPane.PLAIN_MESSAGE,
 		  ViewHelper.createImageIcon(DIALOG_BALL)));
-
 	});
 	placeholder =
-		new JLabel(ViewHelper.createImageIcon(PLACEHOLDER_GAME_SCREEN));
+		new JLabel(ViewHelper.createImageIcon(GAME_SCREEN_BACKGROUND));
 	ViewHelper.setBounds(placeholder, 0, 0, 800, 1280);
 	canvas = new Canvas();
 	ViewHelper.setBounds(canvas, 0, 0, 800, 1280);
+	button_transparent = new JLabel();
+	button_transparent.setBounds(
+		(int) (RETURN_BUTTON_TO_LEFT_DISPLACEMENT * SCALING_FACTOR),
+		(int) (RETURN_BUTTON_TO_TOP_GAME_SCREEN * SCALING_FACTOR), 30, 30);
 
 	// Populate game panel
 	gamePanel = new JPanel(null);
 	gamePanel.add(game_to_menu);
 	gamePanel.add(canvas);
+	gamePanel.add(placeholder);
+	gamePanel.add(button_transparent);
 
 	// Set up card layout
 	cards = new JPanel(new CardLayout());
@@ -261,10 +268,8 @@ ImageConstants, TextConstants, ConversionConstants {
    */
   protected void gameLoop() {
 	Graphics2D g = (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
-
 	// before we render everything im going to flip the y axis and move the
 	// origin to the center (instead of it being in the top left corner)
-	;
 	render(g);
 	// dispose of the graphics object
 	g.dispose();
@@ -477,7 +482,10 @@ ImageConstants, TextConstants, ConversionConstants {
    */
   protected void render(Graphics2D g) {
 	// lets draw over everything with a white background
-	g.setColor(Color.WHITE);
+	g.drawImage(ViewHelper.getImageSuppressExceptions(GAME_SCREEN_BACKGROUND),
+		0, 0, (int) (APP_WIDTH * SCALING_FACTOR),
+		(int) (APP_HEIGHT * SCALING_FACTOR), null);
+	g.setColor(new Color(0f, 0f, 0f, 0f));
 	g.fillRect(0, 0, (int) (APP_WIDTH * SCALING_FACTOR),
 		(int) (APP_HEIGHT * SCALING_FACTOR));
 

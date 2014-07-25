@@ -17,5 +17,7 @@ public interface ImageConstants {
   public static final String DIALOG_BALL = "images/dialog-ball.png";
   public static final String PLACEHOLDER_GAME_SCREEN =
 	  "images/game-screen-mock.png";
+  public static final String GAME_SCREEN_BACKGROUND =
+	  "images/game-screen-background.png";
   public static final String SMALL_BALL = "images/ball-game.png";
 }
