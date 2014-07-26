@@ -27,9 +27,11 @@ import javax.swing.table.TableModel;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.dynamics.World;
+import org.dyn4j.geometry.Capsule;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Convex;
 import org.dyn4j.geometry.Geometry;
+import org.dyn4j.geometry.HalfEllipse;
 import org.dyn4j.geometry.Mass;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Rectangle;
@@ -98,6 +100,13 @@ public class PinballView extends JFrame implements LayoutConstants,
   // Game loop
   private long last;
   private Thread thread;
+
+  // Game objects
+  public GameObject right_pedal;
+  public GameObject ball;
+  public GameObject left_pedal;
+
+  private MyCollisionAdapter collisionAdapter;
 
   public PinballView(PinballControllerInterface controller,
 	  PinballModelInterface model) {
@@ -383,93 +392,256 @@ public class PinballView extends JFrame implements LayoutConstants,
   protected void initializeWorld() {
 	// create the world
 	world = new World();
+	collisionAdapter = new MyCollisionAdapter(this);
+	world.addListener(collisionAdapter);
 
-	// left wall
+	// Static bodies
+
+	// Left wall
 	Triangle t1 =
 		Geometry
 			.createRightTriangle(2.03 * PHYSICS_SCALE, 4.28 * PHYSICS_SCALE);
 	GameObject w1 = new GameObject();
-	w1.addFixture(new BodyFixture(t1));
-	w1.setMass(Mass.Type.INFINITE);
 	t1.translate((2.03 * PHYSICS_SCALE) / 3,
 		-(((2 * (4.28 * PHYSICS_SCALE)) / 3)));
-	world.addBody(w1);
 
 	Rectangle r1 = new Rectangle((2.03 * PHYSICS_SCALE), (1.2 * PHYSICS_SCALE));
-	GameObject w2 = new GameObject();
-	w2.addFixture(r1);
-	w2.setMass(Mass.Type.INFINITE);
 	r1.translate((2.03 * PHYSICS_SCALE) / 2,
 		-((4.28 * PHYSICS_SCALE) + ((1.2 * PHYSICS_SCALE) / 2)));
-	world.addBody(w2);
 
-	// create a circle
-	Circle cirShape = new Circle(0.5);
-	GameObject circle = new GameObject();
-	circle.addFixture(cirShape);
-	circle.setMass();
-	circle.translate(2.0, 2.0);
-	// test adding some force
-	circle.applyForce(new Vector2(-100.0, 0.0));
-	// set some linear damping to simulate rolling friction
-	circle.setLinearDamping(0.05);
-	world.addBody(circle);
+	Vector2[] v1 =
+		{ new Vector2(0.0, 5.47 * PHYSICS_SCALE),
+			new Vector2(2.03 * PHYSICS_SCALE, 5.47 * PHYSICS_SCALE),
+			new Vector2(1.31 * PHYSICS_SCALE, 6.28 * PHYSICS_SCALE),
+			new Vector2(0.0, 6.28 * PHYSICS_SCALE) };
+	Polygon p1 = new Polygon(v1);
+	p1 = Geometry.flipAlongTheXAxis(p1);
+	p1.translate(0, -(11.7 * PHYSICS_SCALE));
 
-	// try a rectangle
-	Rectangle rectShape = new Rectangle(1.0, 1.0);
-	GameObject rectangle = new GameObject();
-	rectangle.addFixture(rectShape);
-	rectangle.setMass();
-	rectangle.translate(0.0, 2.0);
-	rectangle.getLinearVelocity().set(-5.0, 0.0);
-	world.addBody(rectangle);
+	Rectangle r2 = new Rectangle(1.31 * PHYSICS_SCALE, 0.98 * PHYSICS_SCALE);
+	GameObject w4 = new GameObject();
+	w4.addFixture(new BodyFixture(r2));
+	w4.setMass(Mass.Type.INFINITE);
+	r2.translate((1.31 * PHYSICS_SCALE) / 2,
+		-((6.28 * PHYSICS_SCALE) + ((0.98 * PHYSICS_SCALE) / 2)));
+	// world.addBody(w4);
 
-	// try a polygon with lots of vertices
-	Polygon polyShape = Geometry.createUnitCirclePolygon(10, 1.0);
-	GameObject polygon = new GameObject();
-	polygon.addFixture(polyShape);
-	polygon.setMass();
-	polygon.translate(-2.5, 2.0);
-	// set the angular velocity
-	polygon.setAngularVelocity(Math.toRadians(-20.0));
-	world.addBody(polygon);
+	Rectangle r3 = new Rectangle(0.59 * PHYSICS_SCALE, 2.81 * PHYSICS_SCALE);
+	r3.translate((0.59 * PHYSICS_SCALE) / 2,
+		-((8.05 * PHYSICS_SCALE) + ((2.81 * PHYSICS_SCALE) / 2)));
 
-	// try a compound object
-	Circle c1 = new Circle(0.5);
-	BodyFixture c1Fixture = new BodyFixture(c1);
-	c1Fixture.setDensity(0.5);
-	Circle c2 = new Circle(0.5);
-	BodyFixture c2Fixture = new BodyFixture(c2);
-	c2Fixture.setDensity(0.5);
-	Rectangle rm = new Rectangle(2.0, 1.0);
-	// translate the circles in local coordinates
-	c1.translate(-1.0, 0.0);
-	c2.translate(1.0, 0.0);
-	GameObject capsule = new GameObject();
-	capsule.addFixture(c1Fixture);
-	capsule.addFixture(c2Fixture);
-	capsule.addFixture(rm);
-	capsule.setMass();
-	capsule.translate(0.0, 4.0);
-	world.addBody(capsule);
+	Vector2[] v3 =
+		{ new Vector2(0.0, 10.87 * PHYSICS_SCALE),
+			new Vector2(0.59 * PHYSICS_SCALE, 10.87 * PHYSICS_SCALE),
+			new Vector2(3.0 * PHYSICS_SCALE, 12.8 * PHYSICS_SCALE),
+			new Vector2(0.0, 12.8 * PHYSICS_SCALE) };
+	Polygon p3 = new Polygon(v3);
+	p3 = Geometry.flipAlongTheXAxis(p3);
+	p3.translate(0, -24.1 * PHYSICS_SCALE);
 
-	GameObject issTri = new GameObject();
-	issTri.addFixture(Geometry.createIsoscelesTriangle(1.0, 3.0));
-	issTri.setMass();
-	issTri.translate(2.0, 3.0);
-	world.addBody(issTri);
+	GameObject leftWall = new GameObject();
+	leftWall.addFixture(t1);
+	leftWall.addFixture(r2);
+	leftWall.addFixture(r3);
+	leftWall.addFixture(p1);
+	leftWall.addFixture(p3);
+	leftWall.addFixture(r1);
+	leftWall.setMass(Mass.Type.INFINITE);
+	world.addBody(leftWall);
 
-	GameObject equTri = new GameObject();
-	equTri.addFixture(Geometry.createEquilateralTriangle(2.0));
-	equTri.setMass();
-	equTri.translate(3.0, 3.0);
-	world.addBody(equTri);
+	// Right wall
+	Triangle t2 =
+		Geometry.createRightTriangle(2.03 * PHYSICS_SCALE,
+			4.28 * PHYSICS_SCALE, true);
+	t2.translate((8.0 * PHYSICS_SCALE) - (2.03 * PHYSICS_SCALE) / 3,
+		-(((2 * (4.28 * PHYSICS_SCALE)) / 3)));
 
-	GameObject rightTri = new GameObject();
-	rightTri.addFixture(Geometry.createRightTriangle(2.0, 1.0));
-	rightTri.setMass();
-	rightTri.translate(4.0, 3.0);
-	world.addBody(rightTri);
+	Rectangle r4 = new Rectangle((2.03 * PHYSICS_SCALE), (1.2 * PHYSICS_SCALE));
+	r4.translate((8.0 * PHYSICS_SCALE) - (2.03 * PHYSICS_SCALE) / 2,
+		-((4.28 * PHYSICS_SCALE) + ((1.2 * PHYSICS_SCALE) / 2)));
+
+	Vector2[] v4 =
+		{ new Vector2(0.0, 5.47 * PHYSICS_SCALE),
+			new Vector2(2.03 * PHYSICS_SCALE, 5.47 * PHYSICS_SCALE),
+			new Vector2(1.31 * PHYSICS_SCALE, 6.28 * PHYSICS_SCALE),
+			new Vector2(0.0, 6.28 * PHYSICS_SCALE) };
+	Polygon p4 = new Polygon(v4);
+	p4 = Geometry.flipAlongTheXAxis(p4);
+	p4 = Geometry.flipAlongTheYAxis(p4);
+	p4.translate((8.0 * PHYSICS_SCALE) - 1.7 * PHYSICS_SCALE,
+		-(11.7 * PHYSICS_SCALE));
+
+	Rectangle r5 = new Rectangle(1.31 * PHYSICS_SCALE, 0.98 * PHYSICS_SCALE);
+	GameObject w11 = new GameObject();
+	w11.addFixture(new BodyFixture(r5));
+	w11.setMass(Mass.Type.INFINITE);
+	r5.translate((8.0 * PHYSICS_SCALE) - (1.31 * PHYSICS_SCALE) / 2,
+		-((6.28 * PHYSICS_SCALE) + ((0.98 * PHYSICS_SCALE) / 2)));
+
+	Rectangle r6 = new Rectangle(0.59 * PHYSICS_SCALE, 2.81 * PHYSICS_SCALE);
+	GameObject w13 = new GameObject();
+	w13.addFixture(new BodyFixture(r6));
+	w13.setMass(Mass.Type.INFINITE);
+	r6.translate((8.0 * PHYSICS_SCALE) - (0.59 * PHYSICS_SCALE) / 2,
+		-((8.05 * PHYSICS_SCALE) + ((2.81 * PHYSICS_SCALE) / 2)));
+
+	Vector2[] v6 =
+		{ new Vector2(0.0, 10.87 * PHYSICS_SCALE),
+			new Vector2(0.59 * PHYSICS_SCALE, 10.87 * PHYSICS_SCALE),
+			new Vector2(3.0 * PHYSICS_SCALE, 12.8 * PHYSICS_SCALE),
+			new Vector2(0.0, 12.8 * PHYSICS_SCALE) };
+	Polygon p6 = new Polygon(v6);
+	p6 = Geometry.flipAlongTheXAxis(p6);
+	p6 = Geometry.flipAlongTheYAxis(p6);
+	p6.translate((8.0 * PHYSICS_SCALE) - 2.07 * PHYSICS_SCALE, -24.1
+		* PHYSICS_SCALE);
+
+	GameObject rightWall = new GameObject();
+	rightWall.setMass(Mass.Type.INFINITE);
+	rightWall.addFixture(t2);
+	rightWall.addFixture(r4);
+	rightWall.addFixture(r5);
+	rightWall.addFixture(r6);
+	rightWall.addFixture(p4);
+	rightWall.addFixture(p6);
+	world.addBody(rightWall);
+
+	// Entry point ball
+
+	Capsule cp1 = new Capsule(0.24 * PHYSICS_SCALE, 1.66 * PHYSICS_SCALE);
+	GameObject e1 = new GameObject();
+	e1.addFixture(new BodyFixture(cp1));
+	e1.setMass(Mass.Type.INFINITE);
+	e1.translate(1.5 * PHYSICS_SCALE, -2.57 * PHYSICS_SCALE);
+	e1.rotate(Math.toRadians(25));
+	world.addBody(e1);
+
+	GameObject e2 = new GameObject();
+	e2.addFixture(new BodyFixture(cp1));
+	e2.setMass(Mass.Type.INFINITE);
+	e2.translate(0.82 * PHYSICS_SCALE, -2.30 * PHYSICS_SCALE);
+	e2.rotate(Math.toRadians(25));
+	world.addBody(e2);
+
+	Rectangle top_wall_rect =
+		new Rectangle(8.0 * PHYSICS_SCALE, 0.001 * PHYSICS_SCALE);
+	top_wall_rect.translate(4.0 * PHYSICS_SCALE, 0.0);
+	GameObject top_wall = new GameObject();
+	top_wall.setMass(Mass.Type.INFINITE);
+	top_wall.addFixture(top_wall_rect);
+	world.addBody(top_wall);
+
+	// Dynamic bodies
+
+	Vector2[] v2 =
+		{ new Vector2(0.0, 7.26 * PHYSICS_SCALE),
+			new Vector2(1.31 * PHYSICS_SCALE, 7.26 * PHYSICS_SCALE),
+			new Vector2(0.59 * PHYSICS_SCALE, 8.05 * PHYSICS_SCALE),
+			new Vector2(0.0, 8.05 * PHYSICS_SCALE) };
+	Polygon p2 = new Polygon(v2);
+	p2 = Geometry.flipAlongTheXAxis(p2);
+	GameObject leftWallBumper = new GameObject();
+	leftWallBumper.addFixture(new BodyFixture(p2));
+	leftWallBumper.setMass(Mass.Type.INFINITE);
+	p2.translate(0, -15.2 * PHYSICS_SCALE);
+	world.addBody(leftWallBumper);
+
+	Vector2[] v5 =
+		{ new Vector2(0.0, 7.26 * PHYSICS_SCALE),
+			new Vector2(1.31 * PHYSICS_SCALE, 7.26 * PHYSICS_SCALE),
+			new Vector2(0.59 * PHYSICS_SCALE, 8.05 * PHYSICS_SCALE),
+			new Vector2(0.0, 8.05 * PHYSICS_SCALE) };
+	Polygon p5 = new Polygon(v5);
+	p5 = Geometry.flipAlongTheXAxis(p5);
+	p5 = Geometry.flipAlongTheYAxis(p5);
+	GameObject rightWallBumper = new GameObject();
+	rightWallBumper.addFixture(new BodyFixture(p5));
+	rightWallBumper.setMass(Mass.Type.INFINITE);
+	p5.translate((8.0 * PHYSICS_SCALE) - 1.0 * PHYSICS_SCALE, -15.2
+		* PHYSICS_SCALE);
+	world.addBody(rightWallBumper);
+
+	Circle c1 = new Circle(0.23 * PHYSICS_SCALE);
+
+	GameObject circBumper1 = new GameObject();
+	circBumper1.addFixture(new BodyFixture(c1));
+	circBumper1.translate(4.0 * PHYSICS_SCALE, -2.19 * PHYSICS_SCALE);
+	circBumper1.setMass(Mass.Type.INFINITE);
+	world.addBody(circBumper1);
+	GameObject circBumper2 = new GameObject();
+	circBumper2.addFixture(c1);
+	circBumper2.translate(4.67 * PHYSICS_SCALE, -1.16 * PHYSICS_SCALE);
+	circBumper1.setMass(Mass.Type.INFINITE);
+	world.addBody(circBumper2);
+	GameObject circBumper3 = new GameObject();
+	circBumper3.addFixture(c1);
+	circBumper3.translate(5.37 * PHYSICS_SCALE, -2.19 * PHYSICS_SCALE);
+	circBumper3.setMass(Mass.Type.INFINITE);
+	world.addBody(circBumper3);
+	GameObject circBumper4 = new GameObject();
+	circBumper4.addFixture(c1);
+	circBumper4.setMass(Mass.Type.INFINITE);
+	circBumper4.translate(2.64 * PHYSICS_SCALE, -7.76 * PHYSICS_SCALE);
+	world.addBody(circBumper4);
+	GameObject circBumper5 = new GameObject();
+	circBumper5.addFixture(c1);
+	circBumper5.setMass(Mass.Type.INFINITE);
+	circBumper5.translate(1.97 * PHYSICS_SCALE, -8.79 * PHYSICS_SCALE);
+	world.addBody(circBumper5);
+	GameObject circBumper6 = new GameObject();
+	circBumper6.setMass(Mass.Type.INFINITE);
+	circBumper6.addFixture(c1);
+	circBumper6.translate(3.35 * PHYSICS_SCALE, -8.79 * PHYSICS_SCALE);
+	world.addBody(circBumper6);
+
+	Circle c2 = new Circle(0.12 * PHYSICS_SCALE);
+
+	ball = new GameObject();
+	ball.addFixture(c2);
+	ball.setMass();
+	ball.setGravityScale(1.0);
+	ball.getLinearVelocity().set(0.0, -4.0);
+	ball.setAngularVelocity(Math.toRadians(-20.0));
+	ball.translate(1.84 * PHYSICS_SCALE, -1.4 * PHYSICS_SCALE);
+	world.addBody(ball);
+
+	Triangle t3 =
+		Geometry.createIsoscelesTriangle(0.31 * PHYSICS_SCALE,
+			1.21 * PHYSICS_SCALE);
+	t3.translate(0.0, 0.01);
+	HalfEllipse el1 =
+		Geometry.createHalfEllipse(0.31 * PHYSICS_SCALE, 0.31 * PHYSICS_SCALE);
+	el1.translate(0.01, 0.2);
+	el1.rotate(Math.toRadians(90));
+	t3.rotate(Math.toRadians(-90));
+
+	left_pedal = new GameObject();
+	left_pedal.addFixture(new BodyFixture(el1));
+	left_pedal.addFixture(new BodyFixture(t3));
+	left_pedal.setMass(Mass.Type.INFINITE);
+	left_pedal.translate(2.99 * PHYSICS_SCALE, -12.47 * PHYSICS_SCALE);
+	world.addBody(left_pedal);
+
+	Triangle t4 =
+		Geometry.createIsoscelesTriangle(0.31 * PHYSICS_SCALE,
+			1.21 * PHYSICS_SCALE);
+	t4.translate(0.01, 0.0);
+	HalfEllipse el2 =
+		Geometry.createHalfEllipse(0.31 * PHYSICS_SCALE, 0.31 * PHYSICS_SCALE);
+	el2.translate(-0.01, 0.2);
+	el2.rotate(Math.toRadians(90));
+	t4.rotate(Math.toRadians(-90));
+	t4.rotate(Math.toRadians(180));
+	t4.translate(1.2, 0);
+	el2.rotate(Math.toRadians(180));
+	el2.translate(1.2, 0);
+
+	right_pedal = new GameObject();
+	right_pedal.addFixture(t4);
+	right_pedal.addFixture(el2);
+	right_pedal.setMass(Mass.Type.INFINITE);
+	right_pedal.translate(2.99 * PHYSICS_SCALE, -12.47 * PHYSICS_SCALE);
+	world.addBody(right_pedal);
 
   }
 

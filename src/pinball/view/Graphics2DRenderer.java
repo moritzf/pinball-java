@@ -54,7 +54,7 @@ import org.dyn4j.geometry.Shape;
 import org.dyn4j.geometry.Slice;
 import org.dyn4j.geometry.Vector2;
 
-import pinball.constants.ImageConstants;
+import pinball.constants.LayoutConstants;
 
 /**
  * Graphics2D renderer for dyn4j shape types.
@@ -63,7 +63,7 @@ import pinball.constants.ImageConstants;
  * @version 3.1.7
  * @since 3.1.5
  */
-public final class Graphics2DRenderer implements ImageConstants {
+public final class Graphics2DRenderer implements LayoutConstants {
   /**
    * Renders the given shape to the given graphics context using the given
    * scale and color.
@@ -134,12 +134,15 @@ public final class Graphics2DRenderer implements ImageConstants {
 			* scale, radius2 * scale, radius2 * scale);
 
 	// fill the shape
-	g.setColor(color);
+	if (radius < (0.13 * PHYSICS_SCALE)) {
+	  g.setColor(color);
+	}
 	g.fill(c);
 	// draw the outline
-	g.setColor(getOutlineColor(color));
+	if (radius < (0.13 * PHYSICS_SCALE)) {
+	  g.setColor(getOutlineColor(color));
+	}
 	g.draw(c);
-
   }
 
   /**
@@ -170,10 +173,10 @@ public final class Graphics2DRenderer implements ImageConstants {
 	p.closePath();
 
 	// fill the shape
-	g.setColor(color);
+	// g.setColor(color);
 	g.fill(p);
 	// draw the outline
-	g.setColor(getOutlineColor(color));
+	// g.setColor(getOutlineColor(color));
 	g.draw(p);
   }
 
@@ -251,11 +254,11 @@ public final class Graphics2DRenderer implements ImageConstants {
 		true);
 
 	// set the color
-	g.setColor(color);
+	// g.setColor(color);
 	// fill the shape
 	g.fill(path);
 	// set the color
-	g.setColor(getOutlineColor(color));
+	// g.setColor(getOutlineColor(color));
 	// draw the shape
 	g.draw(path);
 
