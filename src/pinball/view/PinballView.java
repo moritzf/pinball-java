@@ -9,6 +9,8 @@ import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
 
@@ -26,7 +28,9 @@ import javax.swing.table.TableModel;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
+import org.dyn4j.dynamics.Force;
 import org.dyn4j.dynamics.World;
+import org.dyn4j.dynamics.joint.RevoluteJoint;
 import org.dyn4j.geometry.Capsule;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Convex;
@@ -41,6 +45,7 @@ import org.dyn4j.geometry.Vector2;
 import pinball.constants.ConversionConstants;
 import pinball.constants.ImageConstants;
 import pinball.constants.LayoutConstants;
+import pinball.constants.PhysicsConstants;
 import pinball.constants.TextConstants;
 import pinball.controller.PinballControllerInterface;
 import pinball.helper.ViewHelper;
@@ -58,7 +63,7 @@ import pinball.model.PinballModelInterface;
  */
 // XXX Implement game
 public class PinballView extends JFrame implements LayoutConstants,
-	ImageConstants, TextConstants, ConversionConstants {
+	ImageConstants, TextConstants, ConversionConstants, PhysicsConstants {
 
   // Menu panel items
   private JLabel logo;
@@ -102,9 +107,11 @@ public class PinballView extends JFrame implements LayoutConstants,
   private Thread thread;
 
   // Game objects
-  public GameObject right_pedal;
-  public GameObject ball;
-  public GameObject left_pedal;
+  private GameObject right_pedal;
+  private GameObject ball;
+  private GameObject left_pedal;
+  private RevoluteJoint j1;
+  private RevoluteJoint j2;
 
   private MyCollisionAdapter collisionAdapter;
 
@@ -259,6 +266,35 @@ public class PinballView extends JFrame implements LayoutConstants,
 	cards.add(highscorePanel, HIGHSCORE);
 	cards.add(gamePanel, GAME);
 	add(cards);
+	cards.addKeyListener(new KeyAdapter() {
+	  @Override
+	  public void keyPressed(KeyEvent e) {
+		if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+		  if (left_pedal.getAccumulatedForce().y == 0) {
+			left_pedal.applyForce(new Force(0, PEDAL_FORCE));
+		  } else {
+			left_pedal.clearForce();
+		  }
+		} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+		  if (right_pedal.getAccumulatedForce().y < PEDAL_FORCE) {
+			right_pedal.applyForce(new Force(0, PEDAL_FORCE));
+		  } else {
+			right_pedal.clearForce();
+		  }
+
+		}
+	  }
+
+	  @Override
+	  public void keyReleased(KeyEvent e) {
+		if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+		  left_pedal.clearAccumulatedForce();
+		} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+		  right_pedal.clearAccumulatedForce();
+		}
+	  }
+	});
+	cards.setFocusable(true);
 
 	// Set visible
 	setVisible(true);
@@ -399,45 +435,46 @@ public class PinballView extends JFrame implements LayoutConstants,
 
 	// Left wall
 	Triangle t1 =
-		Geometry
-			.createRightTriangle(2.03 * PHYSICS_SCALE, 4.28 * PHYSICS_SCALE);
+		Geometry.createRightTriangle(2.03 * SCALING_FACTOR,
+			4.28 * SCALING_FACTOR);
 	GameObject w1 = new GameObject();
-	t1.translate((2.03 * PHYSICS_SCALE) / 3,
-		-(((2 * (4.28 * PHYSICS_SCALE)) / 3)));
+	t1.translate((2.03 * SCALING_FACTOR) / 3,
+		-(((2 * (4.28 * SCALING_FACTOR)) / 3)));
 
-	Rectangle r1 = new Rectangle((2.03 * PHYSICS_SCALE), (1.2 * PHYSICS_SCALE));
-	r1.translate((2.03 * PHYSICS_SCALE) / 2,
-		-((4.28 * PHYSICS_SCALE) + ((1.2 * PHYSICS_SCALE) / 2)));
+	Rectangle r1 =
+		new Rectangle((2.03 * SCALING_FACTOR), (1.2 * SCALING_FACTOR));
+	r1.translate((2.03 * SCALING_FACTOR) / 2,
+		-((4.28 * SCALING_FACTOR) + ((1.2 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v1 =
-		{ new Vector2(0.0, 5.47 * PHYSICS_SCALE),
-			new Vector2(2.03 * PHYSICS_SCALE, 5.47 * PHYSICS_SCALE),
-			new Vector2(1.31 * PHYSICS_SCALE, 6.28 * PHYSICS_SCALE),
-			new Vector2(0.0, 6.28 * PHYSICS_SCALE) };
+	  { new Vector2(0.0, 5.47 * SCALING_FACTOR),
+			new Vector2(2.03 * SCALING_FACTOR, 5.47 * SCALING_FACTOR),
+			new Vector2(1.31 * SCALING_FACTOR, 6.28 * SCALING_FACTOR),
+			new Vector2(0.0, 6.28 * SCALING_FACTOR) };
 	Polygon p1 = new Polygon(v1);
 	p1 = Geometry.flipAlongTheXAxis(p1);
-	p1.translate(0, -(11.7 * PHYSICS_SCALE));
+	p1.translate(0, -(11.7 * SCALING_FACTOR));
 
-	Rectangle r2 = new Rectangle(1.31 * PHYSICS_SCALE, 0.98 * PHYSICS_SCALE);
+	Rectangle r2 = new Rectangle(1.31 * SCALING_FACTOR, 0.98 * SCALING_FACTOR);
 	GameObject w4 = new GameObject();
 	w4.addFixture(new BodyFixture(r2));
 	w4.setMass(Mass.Type.INFINITE);
-	r2.translate((1.31 * PHYSICS_SCALE) / 2,
-		-((6.28 * PHYSICS_SCALE) + ((0.98 * PHYSICS_SCALE) / 2)));
+	r2.translate((1.31 * SCALING_FACTOR) / 2,
+		-((6.28 * SCALING_FACTOR) + ((0.98 * SCALING_FACTOR) / 2)));
 	// world.addBody(w4);
 
-	Rectangle r3 = new Rectangle(0.59 * PHYSICS_SCALE, 2.81 * PHYSICS_SCALE);
-	r3.translate((0.59 * PHYSICS_SCALE) / 2,
-		-((8.05 * PHYSICS_SCALE) + ((2.81 * PHYSICS_SCALE) / 2)));
+	Rectangle r3 = new Rectangle(0.59 * SCALING_FACTOR, 2.81 * SCALING_FACTOR);
+	r3.translate((0.59 * SCALING_FACTOR) / 2,
+		-((8.05 * SCALING_FACTOR) + ((2.81 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v3 =
-		{ new Vector2(0.0, 10.87 * PHYSICS_SCALE),
-			new Vector2(0.59 * PHYSICS_SCALE, 10.87 * PHYSICS_SCALE),
-			new Vector2(3.0 * PHYSICS_SCALE, 12.8 * PHYSICS_SCALE),
-			new Vector2(0.0, 12.8 * PHYSICS_SCALE) };
+	  { new Vector2(0.0, 10.87 * SCALING_FACTOR),
+			new Vector2(0.59 * SCALING_FACTOR, 10.87 * SCALING_FACTOR),
+			new Vector2(3.0 * SCALING_FACTOR, 12.8 * SCALING_FACTOR),
+			new Vector2(0.0, 12.8 * SCALING_FACTOR) };
 	Polygon p3 = new Polygon(v3);
 	p3 = Geometry.flipAlongTheXAxis(p3);
-	p3.translate(0, -24.1 * PHYSICS_SCALE);
+	p3.translate(0, -24.1 * SCALING_FACTOR);
 
 	GameObject leftWall = new GameObject();
 	leftWall.addFixture(t1);
@@ -451,50 +488,51 @@ public class PinballView extends JFrame implements LayoutConstants,
 
 	// Right wall
 	Triangle t2 =
-		Geometry.createRightTriangle(2.03 * PHYSICS_SCALE,
-			4.28 * PHYSICS_SCALE, true);
-	t2.translate((8.0 * PHYSICS_SCALE) - (2.03 * PHYSICS_SCALE) / 3,
-		-(((2 * (4.28 * PHYSICS_SCALE)) / 3)));
+		Geometry.createRightTriangle(2.03 * SCALING_FACTOR,
+			4.28 * SCALING_FACTOR, true);
+	t2.translate((8.0 * SCALING_FACTOR) - (2.03 * SCALING_FACTOR) / 3,
+		-(((2 * (4.28 * SCALING_FACTOR)) / 3)));
 
-	Rectangle r4 = new Rectangle((2.03 * PHYSICS_SCALE), (1.2 * PHYSICS_SCALE));
-	r4.translate((8.0 * PHYSICS_SCALE) - (2.03 * PHYSICS_SCALE) / 2,
-		-((4.28 * PHYSICS_SCALE) + ((1.2 * PHYSICS_SCALE) / 2)));
+	Rectangle r4 =
+		new Rectangle((2.03 * SCALING_FACTOR), (1.2 * SCALING_FACTOR));
+	r4.translate((8.0 * SCALING_FACTOR) - (2.03 * SCALING_FACTOR) / 2,
+		-((4.28 * SCALING_FACTOR) + ((1.2 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v4 =
-		{ new Vector2(0.0, 5.47 * PHYSICS_SCALE),
-			new Vector2(2.03 * PHYSICS_SCALE, 5.47 * PHYSICS_SCALE),
-			new Vector2(1.31 * PHYSICS_SCALE, 6.28 * PHYSICS_SCALE),
-			new Vector2(0.0, 6.28 * PHYSICS_SCALE) };
+	  { new Vector2(0.0, 5.47 * SCALING_FACTOR),
+			new Vector2(2.03 * SCALING_FACTOR, 5.47 * SCALING_FACTOR),
+			new Vector2(1.31 * SCALING_FACTOR, 6.28 * SCALING_FACTOR),
+			new Vector2(0.0, 6.28 * SCALING_FACTOR) };
 	Polygon p4 = new Polygon(v4);
 	p4 = Geometry.flipAlongTheXAxis(p4);
 	p4 = Geometry.flipAlongTheYAxis(p4);
-	p4.translate((8.0 * PHYSICS_SCALE) - 1.7 * PHYSICS_SCALE,
-		-(11.7 * PHYSICS_SCALE));
+	p4.translate((8.0 * SCALING_FACTOR) - 1.7 * SCALING_FACTOR,
+		-(11.7 * SCALING_FACTOR));
 
-	Rectangle r5 = new Rectangle(1.31 * PHYSICS_SCALE, 0.98 * PHYSICS_SCALE);
+	Rectangle r5 = new Rectangle(1.31 * SCALING_FACTOR, 0.98 * SCALING_FACTOR);
 	GameObject w11 = new GameObject();
 	w11.addFixture(new BodyFixture(r5));
 	w11.setMass(Mass.Type.INFINITE);
-	r5.translate((8.0 * PHYSICS_SCALE) - (1.31 * PHYSICS_SCALE) / 2,
-		-((6.28 * PHYSICS_SCALE) + ((0.98 * PHYSICS_SCALE) / 2)));
+	r5.translate((8.0 * SCALING_FACTOR) - (1.31 * SCALING_FACTOR) / 2,
+		-((6.28 * SCALING_FACTOR) + ((0.98 * SCALING_FACTOR) / 2)));
 
-	Rectangle r6 = new Rectangle(0.59 * PHYSICS_SCALE, 2.81 * PHYSICS_SCALE);
+	Rectangle r6 = new Rectangle(0.59 * SCALING_FACTOR, 2.81 * SCALING_FACTOR);
 	GameObject w13 = new GameObject();
 	w13.addFixture(new BodyFixture(r6));
 	w13.setMass(Mass.Type.INFINITE);
-	r6.translate((8.0 * PHYSICS_SCALE) - (0.59 * PHYSICS_SCALE) / 2,
-		-((8.05 * PHYSICS_SCALE) + ((2.81 * PHYSICS_SCALE) / 2)));
+	r6.translate((8.0 * SCALING_FACTOR) - (0.59 * SCALING_FACTOR) / 2,
+		-((8.05 * SCALING_FACTOR) + ((2.81 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v6 =
-		{ new Vector2(0.0, 10.87 * PHYSICS_SCALE),
-			new Vector2(0.59 * PHYSICS_SCALE, 10.87 * PHYSICS_SCALE),
-			new Vector2(3.0 * PHYSICS_SCALE, 12.8 * PHYSICS_SCALE),
-			new Vector2(0.0, 12.8 * PHYSICS_SCALE) };
+	  { new Vector2(0.0, 10.87 * SCALING_FACTOR),
+			new Vector2(0.59 * SCALING_FACTOR, 10.87 * SCALING_FACTOR),
+			new Vector2(3.0 * SCALING_FACTOR, 12.8 * SCALING_FACTOR),
+			new Vector2(0.0, 12.8 * SCALING_FACTOR) };
 	Polygon p6 = new Polygon(v6);
 	p6 = Geometry.flipAlongTheXAxis(p6);
 	p6 = Geometry.flipAlongTheYAxis(p6);
-	p6.translate((8.0 * PHYSICS_SCALE) - 2.07 * PHYSICS_SCALE, -24.1
-		* PHYSICS_SCALE);
+	p6.translate((8.0 * SCALING_FACTOR) - 2.07 * SCALING_FACTOR, -24.1
+		* SCALING_FACTOR);
 
 	GameObject rightWall = new GameObject();
 	rightWall.setMass(Mass.Type.INFINITE);
@@ -508,24 +546,24 @@ public class PinballView extends JFrame implements LayoutConstants,
 
 	// Entry point ball
 
-	Capsule cp1 = new Capsule(0.24 * PHYSICS_SCALE, 1.66 * PHYSICS_SCALE);
+	Capsule cp1 = new Capsule(0.24 * SCALING_FACTOR, 1.66 * SCALING_FACTOR);
 	GameObject e1 = new GameObject();
 	e1.addFixture(new BodyFixture(cp1));
 	e1.setMass(Mass.Type.INFINITE);
-	e1.translate(1.5 * PHYSICS_SCALE, -2.57 * PHYSICS_SCALE);
+	e1.translate(1.5 * SCALING_FACTOR, -2.57 * SCALING_FACTOR);
 	e1.rotate(Math.toRadians(25));
 	world.addBody(e1);
 
 	GameObject e2 = new GameObject();
 	e2.addFixture(new BodyFixture(cp1));
 	e2.setMass(Mass.Type.INFINITE);
-	e2.translate(0.82 * PHYSICS_SCALE, -2.30 * PHYSICS_SCALE);
+	e2.translate(0.82 * SCALING_FACTOR, -2.30 * SCALING_FACTOR);
 	e2.rotate(Math.toRadians(25));
 	world.addBody(e2);
 
 	Rectangle top_wall_rect =
-		new Rectangle(8.0 * PHYSICS_SCALE, 0.001 * PHYSICS_SCALE);
-	top_wall_rect.translate(4.0 * PHYSICS_SCALE, 0.0);
+		new Rectangle(8.0 * SCALING_FACTOR, 0.001 * SCALING_FACTOR);
+	top_wall_rect.translate(4.0 * SCALING_FACTOR, 0.0);
 	GameObject top_wall = new GameObject();
 	top_wall.setMass(Mass.Type.INFINITE);
 	top_wall.addFixture(top_wall_rect);
@@ -534,114 +572,131 @@ public class PinballView extends JFrame implements LayoutConstants,
 	// Dynamic bodies
 
 	Vector2[] v2 =
-		{ new Vector2(0.0, 7.26 * PHYSICS_SCALE),
-			new Vector2(1.31 * PHYSICS_SCALE, 7.26 * PHYSICS_SCALE),
-			new Vector2(0.59 * PHYSICS_SCALE, 8.05 * PHYSICS_SCALE),
-			new Vector2(0.0, 8.05 * PHYSICS_SCALE) };
+	  { new Vector2(0.0, 7.26 * SCALING_FACTOR),
+			new Vector2(1.31 * SCALING_FACTOR, 7.26 * SCALING_FACTOR),
+			new Vector2(0.59 * SCALING_FACTOR, 8.05 * SCALING_FACTOR),
+			new Vector2(0.0, 8.05 * SCALING_FACTOR) };
 	Polygon p2 = new Polygon(v2);
 	p2 = Geometry.flipAlongTheXAxis(p2);
 	GameObject leftWallBumper = new GameObject();
 	leftWallBumper.addFixture(new BodyFixture(p2));
 	leftWallBumper.setMass(Mass.Type.INFINITE);
-	p2.translate(0, -15.2 * PHYSICS_SCALE);
+	p2.translate(0, -15.2 * SCALING_FACTOR);
 	world.addBody(leftWallBumper);
 
 	Vector2[] v5 =
-		{ new Vector2(0.0, 7.26 * PHYSICS_SCALE),
-			new Vector2(1.31 * PHYSICS_SCALE, 7.26 * PHYSICS_SCALE),
-			new Vector2(0.59 * PHYSICS_SCALE, 8.05 * PHYSICS_SCALE),
-			new Vector2(0.0, 8.05 * PHYSICS_SCALE) };
+	  { new Vector2(0.0, 7.26 * SCALING_FACTOR),
+			new Vector2(1.31 * SCALING_FACTOR, 7.26 * SCALING_FACTOR),
+			new Vector2(0.59 * SCALING_FACTOR, 8.05 * SCALING_FACTOR),
+			new Vector2(0.0, 8.05 * SCALING_FACTOR) };
 	Polygon p5 = new Polygon(v5);
 	p5 = Geometry.flipAlongTheXAxis(p5);
 	p5 = Geometry.flipAlongTheYAxis(p5);
 	GameObject rightWallBumper = new GameObject();
 	rightWallBumper.addFixture(new BodyFixture(p5));
 	rightWallBumper.setMass(Mass.Type.INFINITE);
-	p5.translate((8.0 * PHYSICS_SCALE) - 1.0 * PHYSICS_SCALE, -15.2
-		* PHYSICS_SCALE);
+	p5.translate((8.0 * SCALING_FACTOR) - 1.0 * SCALING_FACTOR, -15.2
+		* SCALING_FACTOR);
 	world.addBody(rightWallBumper);
 
-	Circle c1 = new Circle(0.23 * PHYSICS_SCALE);
+	Circle c1 = new Circle(0.23 * SCALING_FACTOR);
 
 	GameObject circBumper1 = new GameObject();
 	circBumper1.addFixture(new BodyFixture(c1));
-	circBumper1.translate(4.0 * PHYSICS_SCALE, -2.19 * PHYSICS_SCALE);
+	circBumper1.translate(4.0 * SCALING_FACTOR, -2.19 * SCALING_FACTOR);
 	circBumper1.setMass(Mass.Type.INFINITE);
 	world.addBody(circBumper1);
 	GameObject circBumper2 = new GameObject();
 	circBumper2.addFixture(c1);
-	circBumper2.translate(4.67 * PHYSICS_SCALE, -1.16 * PHYSICS_SCALE);
+	circBumper2.translate(4.67 * SCALING_FACTOR, -1.16 * SCALING_FACTOR);
 	circBumper1.setMass(Mass.Type.INFINITE);
 	world.addBody(circBumper2);
 	GameObject circBumper3 = new GameObject();
 	circBumper3.addFixture(c1);
-	circBumper3.translate(5.37 * PHYSICS_SCALE, -2.19 * PHYSICS_SCALE);
+	circBumper3.translate(5.37 * SCALING_FACTOR, -2.19 * SCALING_FACTOR);
 	circBumper3.setMass(Mass.Type.INFINITE);
 	world.addBody(circBumper3);
 	GameObject circBumper4 = new GameObject();
 	circBumper4.addFixture(c1);
 	circBumper4.setMass(Mass.Type.INFINITE);
-	circBumper4.translate(2.64 * PHYSICS_SCALE, -7.76 * PHYSICS_SCALE);
+	circBumper4.translate(2.64 * SCALING_FACTOR, -7.76 * SCALING_FACTOR);
 	world.addBody(circBumper4);
 	GameObject circBumper5 = new GameObject();
 	circBumper5.addFixture(c1);
 	circBumper5.setMass(Mass.Type.INFINITE);
-	circBumper5.translate(1.97 * PHYSICS_SCALE, -8.79 * PHYSICS_SCALE);
+	circBumper5.translate(1.97 * SCALING_FACTOR, -8.79 * SCALING_FACTOR);
 	world.addBody(circBumper5);
 	GameObject circBumper6 = new GameObject();
 	circBumper6.setMass(Mass.Type.INFINITE);
 	circBumper6.addFixture(c1);
-	circBumper6.translate(3.35 * PHYSICS_SCALE, -8.79 * PHYSICS_SCALE);
+	circBumper6.translate(3.35 * SCALING_FACTOR, -8.79 * SCALING_FACTOR);
 	world.addBody(circBumper6);
 
-	Circle c2 = new Circle(0.12 * PHYSICS_SCALE);
+	Circle c2 = new Circle(0.12 * SCALING_FACTOR);
 
 	ball = new GameObject();
 	ball.addFixture(c2);
 	ball.setMass();
 	ball.setGravityScale(1.0);
-	ball.getLinearVelocity().set(0.0, -4.0);
+	ball.getLinearVelocity().set(0.0, -6.0);
 	ball.setAngularVelocity(Math.toRadians(-20.0));
-	ball.translate(1.84 * PHYSICS_SCALE, -1.4 * PHYSICS_SCALE);
+	ball.translate(1.84 * SCALING_FACTOR, -1.4 * SCALING_FACTOR);
 	world.addBody(ball);
 
 	Triangle t3 =
-		Geometry.createIsoscelesTriangle(0.31 * PHYSICS_SCALE,
-			1.21 * PHYSICS_SCALE);
-	t3.translate(0.0, 0.01);
+		Geometry.createIsoscelesTriangle(0.31 * SCALING_FACTOR,
+			1.21 * SCALING_FACTOR);
+	t3.translate(-0.01, 0.03);
 	HalfEllipse el1 =
-		Geometry.createHalfEllipse(0.31 * PHYSICS_SCALE, 0.31 * PHYSICS_SCALE);
-	el1.translate(0.01, 0.2);
+		Geometry
+		.createHalfEllipse(0.31 * SCALING_FACTOR, 0.31 * SCALING_FACTOR);
+	el1.translate(0.01, 0.205);
 	el1.rotate(Math.toRadians(90));
 	t3.rotate(Math.toRadians(-90));
 
 	left_pedal = new GameObject();
-	left_pedal.addFixture(new BodyFixture(el1));
 	left_pedal.addFixture(new BodyFixture(t3));
-	left_pedal.setMass(Mass.Type.INFINITE);
-	left_pedal.translate(2.99 * PHYSICS_SCALE, -12.47 * PHYSICS_SCALE);
+	left_pedal.addFixture(new BodyFixture(el1));
+	left_pedal.setMass();
+	left_pedal.translate((3) * SCALING_FACTOR, -12.52 * SCALING_FACTOR);
 	world.addBody(left_pedal);
 
 	Triangle t4 =
-		Geometry.createIsoscelesTriangle(0.31 * PHYSICS_SCALE,
-			1.21 * PHYSICS_SCALE);
+		Geometry.createIsoscelesTriangle(0.31 * SCALING_FACTOR,
+			1.21 * SCALING_FACTOR);
 	t4.translate(0.01, 0.0);
 	HalfEllipse el2 =
-		Geometry.createHalfEllipse(0.31 * PHYSICS_SCALE, 0.31 * PHYSICS_SCALE);
+		Geometry
+			.createHalfEllipse(0.31 * SCALING_FACTOR, 0.31 * SCALING_FACTOR);
 	el2.translate(-0.01, 0.2);
 	el2.rotate(Math.toRadians(90));
 	t4.rotate(Math.toRadians(-90));
 	t4.rotate(Math.toRadians(180));
 	t4.translate(1.2, 0);
 	el2.rotate(Math.toRadians(180));
-	el2.translate(1.2, 0);
+	el2.translate(1.25, 0.003);
 
 	right_pedal = new GameObject();
 	right_pedal.addFixture(t4);
 	right_pedal.addFixture(el2);
-	right_pedal.setMass(Mass.Type.INFINITE);
-	right_pedal.translate(2.99 * PHYSICS_SCALE, -12.47 * PHYSICS_SCALE);
+	right_pedal.setMass();
+	right_pedal.translate(3 * SCALING_FACTOR, -12.52 * SCALING_FACTOR);
 	world.addBody(right_pedal);
+
+	j1 =
+		new RevoluteJoint(left_pedal, leftWall, new Vector2((8.0 - 5.47)
+			* SCALING_FACTOR, -12.52 * SCALING_FACTOR));
+	j1.setLimitEnabled(true);
+	j1.setReferenceAngle(Math.toRadians(0));
+	j1.setLimits(Math.toRadians(-7.2), Math.toRadians(40));
+	world.addJoint(j1);
+	j2 =
+		new RevoluteJoint(rightWall, right_pedal, new Vector2(
+			(5.47) * SCALING_FACTOR, -12.52 * SCALING_FACTOR));
+	j2.setLimitEnabled(true);
+	j2.setReferenceAngle(Math.toRadians(0));
+	j2.setLimits(Math.toRadians(-7.2), Math.toRadians(40));
+	world.addJoint(j2);
 
   }
 

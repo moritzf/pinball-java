@@ -8,8 +8,7 @@ public interface LayoutConstants {
   public static final int APP_WIDTH = 800;
   public static final int APP_HEIGHT = 1280;
   public static final double SCALING_FACTOR = 0.6;
-  /* Physics Engine scaling factor */
-  public static final double PHYSICS_SCALE = 0.6;
+
   // Menu
   public static final int BUTTON_DISPLACEMENT = 50;
   public static final int BUTTON_TO_LOGO_DISPLACEMENT = 150;

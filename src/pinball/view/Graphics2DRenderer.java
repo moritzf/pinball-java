@@ -66,7 +66,7 @@ import pinball.constants.LayoutConstants;
 public final class Graphics2DRenderer implements LayoutConstants {
   /**
    * Renders the given shape to the given graphics context using the given
-   * scale and color.
+   * scale and color
    *
    * @param g
    *          the graphics context
@@ -134,13 +134,13 @@ public final class Graphics2DRenderer implements LayoutConstants {
 			* scale, radius2 * scale, radius2 * scale);
 
 	// fill the shape
-	if (radius < (0.13 * PHYSICS_SCALE)) {
-	  g.setColor(color);
+	if (radius < (0.13 * SCALING_FACTOR)) {
+	  g.setColor(Color.GRAY);
 	}
 	g.fill(c);
 	// draw the outline
-	if (radius < (0.13 * PHYSICS_SCALE)) {
-	  g.setColor(getOutlineColor(color));
+	if (radius < (0.13 * SCALING_FACTOR)) {
+	  g.setColor(getOutlineColor(Color.GRAY));
 	}
 	g.draw(c);
   }
@@ -173,8 +173,14 @@ public final class Graphics2DRenderer implements LayoutConstants {
 	p.closePath();
 
 	// fill the shape
+	if (polygon.getRadius() < (0.81 * SCALING_FACTOR)) {
+	  g.setColor(Color.black);
+	}
 	// g.setColor(color);
 	g.fill(p);
+	if (polygon.getRadius() < (0.81 * SCALING_FACTOR)) {
+	  g.setColor(Color.black);
+	}
 	// draw the outline
 	// g.setColor(getOutlineColor(color));
 	g.draw(p);
@@ -203,7 +209,7 @@ public final class Graphics2DRenderer implements LayoutConstants {
 			vertices[1].x * scale, vertices[1].y * scale);
 
 	// draw the outline
-	g.setColor(getOutlineColor(color));
+	g.setColor(getOutlineColor(Color.black));
 	g.draw(l);
   }
 
@@ -298,10 +304,10 @@ public final class Graphics2DRenderer implements LayoutConstants {
 			width * scale, height * scale);
 
 	// fill the shape
-	g.setColor(color);
+	g.setColor(Color.black);
 	g.fill(c);
 	// draw the outline
-	g.setColor(getOutlineColor(color));
+	g.setColor(getOutlineColor(Color.black));
 	g.draw(c);
 
 	// re-instate the old transform
@@ -345,10 +351,10 @@ public final class Graphics2DRenderer implements LayoutConstants {
 			-Math.toDegrees(theta2), Math.toDegrees(2.0 * theta2), Arc2D.PIE);
 
 	// fill the shape
-	g.setColor(color);
+	g.setColor(Color.black);
 	g.fill(a);
 	// draw the outline
-	g.setColor(getOutlineColor(color));
+	g.setColor(getOutlineColor(Color.black));
 	g.draw(a);
 
 	// re-instate the old transform
@@ -391,10 +397,10 @@ public final class Graphics2DRenderer implements LayoutConstants {
 			width * scale, height * 2.0 * scale, 0, -180.0, Arc2D.PIE);
 
 	// fill the shape
-	g.setColor(color);
+	g.setColor(Color.black);
 	g.fill(a);
 	// draw the outline
-	g.setColor(getOutlineColor(color));
+	g.setColor(Color.black);
 	g.draw(a);
 
 	// re-instate the old transform
