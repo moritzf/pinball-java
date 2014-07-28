@@ -5,6 +5,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -26,6 +27,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.table.TableModel;
 
+import org.dyn4j.collision.AxisAlignedBounds;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.dynamics.Force;
@@ -49,21 +51,22 @@ import pinball.constants.PhysicsConstants;
 import pinball.constants.TextConstants;
 import pinball.controller.PinballControllerInterface;
 import pinball.helper.ViewHelper;
+import pinball.model.LiveObserver;
 import pinball.model.PinballModelInterface;
+import pinball.model.ScoreObserver;
 
 /**
  * Responsible for the appearance of the application.
  */
 /*
- * XXX Implement pause menu
- * XXX Implement game scoring
- * XXX Implement game messages
- * XXX Notify user that high score was saved
- * XXX Create game bodies
+ * TODO Implement game messages
+ * TODO keep track of balls and supply new one when ball out of bounds
+ * TODO make sure that button are only pressed in game
+ * TODO ball listener
  */
-// XXX Implement game
 public class PinballView extends JFrame implements LayoutConstants,
-	ImageConstants, TextConstants, ConversionConstants, PhysicsConstants {
+ImageConstants, TextConstants, ConversionConstants, PhysicsConstants,
+	ScoreObserver, LiveObserver {
 
   // Menu panel items
   private JLabel logo;
@@ -88,6 +91,8 @@ public class PinballView extends JFrame implements LayoutConstants,
   private JLabel placeholder;
   private World world;
   JLabel button_transparent;
+  private JLabel game_messages;
+  private JLabel game_score;
 
   // Panels
   private JPanel menuPanel;
@@ -108,12 +113,19 @@ public class PinballView extends JFrame implements LayoutConstants,
 
   // Game objects
   private GameObject right_pedal;
-  private GameObject ball;
+  public GameObject ball;
   private GameObject left_pedal;
   private RevoluteJoint j1;
   private RevoluteJoint j2;
+  public GameObject circBumper1;
+  public GameObject circBumper2;
+  public GameObject circBumper3;
+  public GameObject circBumper4;
+  public GameObject circBumper5;
+  public GameObject circBumper6;
 
   private MyCollisionAdapter collisionAdapter;
+  private MyOutOfBoundsAdapter outOfBoundsAdapter;
 
   public PinballView(PinballControllerInterface controller,
 	  PinballModelInterface model) {
@@ -135,25 +147,23 @@ public class PinballView extends JFrame implements LayoutConstants,
 	}
 	// Set name
 	setTitle("Pinball");
-
 	// Exit window on close
 	setDefaultCloseOperation(EXIT_ON_CLOSE);
-
 	// Instantiate menu panel items
 	logo = new JLabel(ViewHelper.createImageIcon(LOGO));
 	logo.setPreferredSize(ViewHelper.imageSize(logo.getIcon()));
 	play = new JButton(ViewHelper.createImageIcon(PLAY_BUTTON));
 	play.setPreferredSize(ViewHelper.imageSize(play.getIcon()));
 	play.addActionListener(e -> {
-	  // controller.startGame((String) (JOptionPane.showInputDialog(this,
-	  // "Please enter your player name!", "Player Name", DO_NOTHING_ON_CLOSE,
-	  // ViewHelper.createImageIcon(DIALOG_BALL), null, null)));
-	  controller.startGame("Test"); // DEBUG
+	  controller.startGame((String) (JOptionPane.showInputDialog(this,
+		  "Please enter your player name!", "Player Name", DO_NOTHING_ON_CLOSE,
+		  ViewHelper.createImageIcon(DIALOG_BALL), null, null)));
 	  last = System.nanoTime();
 	  canvas.setIgnoreRepaint(true);
 	  canvas.createBufferStrategy(2);
 	  CardLayout cl = (CardLayout) (cards.getLayout());
 	  cl.show(cards, GAME);
+	  gamePanel.requestFocusInWindow();
 	  initializeWorld();
 	  Thread thread = new Thread() {
 		@Override
@@ -174,7 +184,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	});
 	menu_big_ball = new JLabel(ViewHelper.createImageIcon(MENU_BIG_BALL));
 	menu_big_ball
-		.setPreferredSize(ViewHelper.imageSize(menu_big_ball.getIcon()));
+	.setPreferredSize(ViewHelper.imageSize(menu_big_ball.getIcon()));
 	highscore = new JButton(ViewHelper.createImageIcon(HIGHSCORE_BUTTON));
 	highscore.setPreferredSize(ViewHelper.imageSize(highscore.getIcon()));
 	highscore.addActionListener(e -> {
@@ -202,7 +212,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	credits_text = new JLabel(CREDITS_TEXT);
 	ViewHelper.setBounds(credits_text,
 		RETURN_BUTTON_TO_TEXT_DISPLACEMENT + RETURN_BUTTON_TO_LEFT_DISPLACEMENT
-			+ (int) ViewHelper.imageSize(credits_to_menu.getIcon()).getWidth(),
+		+ (int) ViewHelper.imageSize(credits_to_menu.getIcon()).getWidth(),
 		RETURN_BUTTON_TO_TOP_DISPLACEMENT + credits_to_menu.getHeight() / 2);
 
 	// Populate credits panel;
@@ -215,16 +225,16 @@ public class PinballView extends JFrame implements LayoutConstants,
 	highscore_scores = new JTable((TableModel) model);
 	scrollPane = new JScrollPane(highscore_scores);
 	ViewHelper
-		.setBounds(
-			scrollPane,
-			(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
-			(RETURN_BUTTON_TO_TOP_DISPLACEMENT + highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
-			TABLE_WIDTH, TABLE_HEIGHT);
+	.setBounds(
+		scrollPane,
+		(APP_WIDTH / 2) - (TABLE_WIDTH / 2),
+		(RETURN_BUTTON_TO_TOP_DISPLACEMENT + highscore_to_menu.getHeight() + RETURN_BUTTON_TO_TABLE_DISPLACEMENT),
+		TABLE_WIDTH, TABLE_HEIGHT);
 	highscore_logo = new JLabel(ViewHelper.createImageIcon(HIGHSCORE_LOGO));
 	ViewHelper.setBounds(highscore_logo, (int) ((APP_WIDTH / 2) - (ViewHelper
 		.imageSize(HIGHSCORE_LOGO).getWidth() / 2)),
 		RETURN_BUTTON_TO_TOP_DISPLACEMENT
-			+ RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT);
+		+ RETURN_BUTTON_TO_HIGHSCORE_LOGO_DISPLACEMENT);
 
 	// Populate highscore panel
 	highscorePanel = new JPanel(null);
@@ -237,10 +247,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	ViewHelper.setBounds(game_to_menu, RETURN_BUTTON_TO_LEFT_DISPLACEMENT,
 		RETURN_BUTTON_TO_TOP_GAME_SCREEN);
 	game_to_menu.addActionListener(e -> {
-	  controller.stopGame(JOptionPane.showConfirmDialog(this,
-		  "Do you want to save your \nhighscore.", "Highscore",
-		  DO_NOTHING_ON_CLOSE, JOptionPane.PLAIN_MESSAGE,
-		  ViewHelper.createImageIcon(DIALOG_BALL)));
+	  controller.stopGame(getSaveHighscoreDialog());
 	});
 	placeholder =
 		new JLabel(ViewHelper.createImageIcon(GAME_SCREEN_BACKGROUND));
@@ -251,10 +258,18 @@ public class PinballView extends JFrame implements LayoutConstants,
 	button_transparent.setBounds(
 		(int) (RETURN_BUTTON_TO_LEFT_DISPLACEMENT * SCALING_FACTOR),
 		(int) (RETURN_BUTTON_TO_TOP_GAME_SCREEN * SCALING_FACTOR), 30, 30);
+	game_messages = new JLabel("");
+	game_messages.setFont(new Font("Impact", Font.PLAIN, 30));
+	ViewHelper.setBounds(game_messages, 40, 463, 150, 45);
+	game_score = new JLabel(new Integer(0).toString());
+	ViewHelper.setBounds(game_score, 627, 463, 150, 45);
+	game_score.setFont(new Font("Impact", Font.PLAIN, 35));
 
 	// Populate game panel
 	gamePanel = new JPanel(null);
 	gamePanel.add(game_to_menu);
+	gamePanel.add(game_messages);
+	gamePanel.add(game_score);
 	gamePanel.add(canvas);
 	gamePanel.add(placeholder);
 	gamePanel.add(button_transparent);
@@ -266,7 +281,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	cards.add(highscorePanel, HIGHSCORE);
 	cards.add(gamePanel, GAME);
 	add(cards);
-	cards.addKeyListener(new KeyAdapter() {
+	gamePanel.addKeyListener(new KeyAdapter() {
 	  @Override
 	  public void keyPressed(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_LEFT) {
@@ -305,7 +320,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	setSize(new Dimension((int) (APP_WIDTH * SCALING_FACTOR)
 		+ getInsets().right + getInsets().left,
 		(int) (APP_HEIGHT * SCALING_FACTOR) + getInsets().top
-			+ getInsets().bottom));
+		+ getInsets().bottom));
   }
 
   /**
@@ -425,21 +440,18 @@ public class PinballView extends JFrame implements LayoutConstants,
    * <p>
    * Basically the same shapes from the Shapes test in the TestBed.
    */
-  protected void initializeWorld() {
+  public void initializeWorld() {
 	// create the world
 	world = new World();
-	collisionAdapter = new MyCollisionAdapter(this);
+	outOfBoundsAdapter = new MyOutOfBoundsAdapter(this, controller);
+	collisionAdapter = new MyCollisionAdapter(this, controller);
+	world.setBounds(new AxisAlignedBounds(16, 24.8));
+	world.addListener(outOfBoundsAdapter);
 	world.addListener(collisionAdapter);
 
 	// Static bodies
 
 	// Left wall
-	Triangle t1 =
-		Geometry.createRightTriangle(2.03 * SCALING_FACTOR,
-			4.28 * SCALING_FACTOR);
-	GameObject w1 = new GameObject();
-	t1.translate((2.03 * SCALING_FACTOR) / 3,
-		-(((2 * (4.28 * SCALING_FACTOR)) / 3)));
 
 	Rectangle r1 =
 		new Rectangle((2.03 * SCALING_FACTOR), (1.2 * SCALING_FACTOR));
@@ -447,7 +459,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 		-((4.28 * SCALING_FACTOR) + ((1.2 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v1 =
-	  { new Vector2(0.0, 5.47 * SCALING_FACTOR),
+		{ new Vector2(0.0, 5.47 * SCALING_FACTOR),
 			new Vector2(2.03 * SCALING_FACTOR, 5.47 * SCALING_FACTOR),
 			new Vector2(1.31 * SCALING_FACTOR, 6.28 * SCALING_FACTOR),
 			new Vector2(0.0, 6.28 * SCALING_FACTOR) };
@@ -468,7 +480,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 		-((8.05 * SCALING_FACTOR) + ((2.81 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v3 =
-	  { new Vector2(0.0, 10.87 * SCALING_FACTOR),
+		{ new Vector2(0.0, 10.87 * SCALING_FACTOR),
 			new Vector2(0.59 * SCALING_FACTOR, 10.87 * SCALING_FACTOR),
 			new Vector2(3.0 * SCALING_FACTOR, 12.8 * SCALING_FACTOR),
 			new Vector2(0.0, 12.8 * SCALING_FACTOR) };
@@ -477,7 +489,6 @@ public class PinballView extends JFrame implements LayoutConstants,
 	p3.translate(0, -24.1 * SCALING_FACTOR);
 
 	GameObject leftWall = new GameObject();
-	leftWall.addFixture(t1);
 	leftWall.addFixture(r2);
 	leftWall.addFixture(r3);
 	leftWall.addFixture(p1);
@@ -487,11 +498,6 @@ public class PinballView extends JFrame implements LayoutConstants,
 	world.addBody(leftWall);
 
 	// Right wall
-	Triangle t2 =
-		Geometry.createRightTriangle(2.03 * SCALING_FACTOR,
-			4.28 * SCALING_FACTOR, true);
-	t2.translate((8.0 * SCALING_FACTOR) - (2.03 * SCALING_FACTOR) / 3,
-		-(((2 * (4.28 * SCALING_FACTOR)) / 3)));
 
 	Rectangle r4 =
 		new Rectangle((2.03 * SCALING_FACTOR), (1.2 * SCALING_FACTOR));
@@ -499,7 +505,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 		-((4.28 * SCALING_FACTOR) + ((1.2 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v4 =
-	  { new Vector2(0.0, 5.47 * SCALING_FACTOR),
+		{ new Vector2(0.0, 5.47 * SCALING_FACTOR),
 			new Vector2(2.03 * SCALING_FACTOR, 5.47 * SCALING_FACTOR),
 			new Vector2(1.31 * SCALING_FACTOR, 6.28 * SCALING_FACTOR),
 			new Vector2(0.0, 6.28 * SCALING_FACTOR) };
@@ -524,7 +530,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 		-((8.05 * SCALING_FACTOR) + ((2.81 * SCALING_FACTOR) / 2)));
 
 	Vector2[] v6 =
-	  { new Vector2(0.0, 10.87 * SCALING_FACTOR),
+		{ new Vector2(0.0, 10.87 * SCALING_FACTOR),
 			new Vector2(0.59 * SCALING_FACTOR, 10.87 * SCALING_FACTOR),
 			new Vector2(3.0 * SCALING_FACTOR, 12.8 * SCALING_FACTOR),
 			new Vector2(0.0, 12.8 * SCALING_FACTOR) };
@@ -536,7 +542,6 @@ public class PinballView extends JFrame implements LayoutConstants,
 
 	GameObject rightWall = new GameObject();
 	rightWall.setMass(Mass.Type.INFINITE);
-	rightWall.addFixture(t2);
 	rightWall.addFixture(r4);
 	rightWall.addFixture(r5);
 	rightWall.addFixture(r6);
@@ -572,7 +577,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	// Dynamic bodies
 
 	Vector2[] v2 =
-	  { new Vector2(0.0, 7.26 * SCALING_FACTOR),
+		{ new Vector2(0.0, 7.26 * SCALING_FACTOR),
 			new Vector2(1.31 * SCALING_FACTOR, 7.26 * SCALING_FACTOR),
 			new Vector2(0.59 * SCALING_FACTOR, 8.05 * SCALING_FACTOR),
 			new Vector2(0.0, 8.05 * SCALING_FACTOR) };
@@ -585,7 +590,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	world.addBody(leftWallBumper);
 
 	Vector2[] v5 =
-	  { new Vector2(0.0, 7.26 * SCALING_FACTOR),
+		{ new Vector2(0.0, 7.26 * SCALING_FACTOR),
 			new Vector2(1.31 * SCALING_FACTOR, 7.26 * SCALING_FACTOR),
 			new Vector2(0.59 * SCALING_FACTOR, 8.05 * SCALING_FACTOR),
 			new Vector2(0.0, 8.05 * SCALING_FACTOR) };
@@ -601,47 +606,56 @@ public class PinballView extends JFrame implements LayoutConstants,
 
 	Circle c1 = new Circle(0.23 * SCALING_FACTOR);
 
-	GameObject circBumper1 = new GameObject();
+	circBumper1 = new GameObject();
 	circBumper1.addFixture(new BodyFixture(c1));
 	circBumper1.translate(4.0 * SCALING_FACTOR, -2.19 * SCALING_FACTOR);
 	circBumper1.setMass(Mass.Type.INFINITE);
 	world.addBody(circBumper1);
-	GameObject circBumper2 = new GameObject();
+	circBumper2 = new GameObject();
 	circBumper2.addFixture(c1);
 	circBumper2.translate(4.67 * SCALING_FACTOR, -1.16 * SCALING_FACTOR);
 	circBumper1.setMass(Mass.Type.INFINITE);
 	world.addBody(circBumper2);
-	GameObject circBumper3 = new GameObject();
+	circBumper3 = new GameObject();
 	circBumper3.addFixture(c1);
 	circBumper3.translate(5.37 * SCALING_FACTOR, -2.19 * SCALING_FACTOR);
 	circBumper3.setMass(Mass.Type.INFINITE);
 	world.addBody(circBumper3);
-	GameObject circBumper4 = new GameObject();
+	circBumper4 = new GameObject();
 	circBumper4.addFixture(c1);
 	circBumper4.setMass(Mass.Type.INFINITE);
 	circBumper4.translate(2.64 * SCALING_FACTOR, -7.76 * SCALING_FACTOR);
 	world.addBody(circBumper4);
-	GameObject circBumper5 = new GameObject();
+	circBumper5 = new GameObject();
 	circBumper5.addFixture(c1);
 	circBumper5.setMass(Mass.Type.INFINITE);
 	circBumper5.translate(1.97 * SCALING_FACTOR, -8.79 * SCALING_FACTOR);
 	world.addBody(circBumper5);
-	GameObject circBumper6 = new GameObject();
+	circBumper6 = new GameObject();
 	circBumper6.setMass(Mass.Type.INFINITE);
 	circBumper6.addFixture(c1);
 	circBumper6.translate(3.35 * SCALING_FACTOR, -8.79 * SCALING_FACTOR);
 	world.addBody(circBumper6);
 
-	Circle c2 = new Circle(0.12 * SCALING_FACTOR);
+	Triangle t1 =
+		Geometry.createRightTriangle(2.03 * SCALING_FACTOR,
+			4.28 * SCALING_FACTOR);
+	GameObject w1 = new GameObject();
+	t1.translate((2.03 * SCALING_FACTOR) / 3,
+		-(((2 * (4.28 * SCALING_FACTOR)) / 3)));
+	w1.addFixture(t1);
+	world.addBody(w1);
 
-	ball = new GameObject();
-	ball.addFixture(c2);
-	ball.setMass();
-	ball.setGravityScale(1.0);
-	ball.getLinearVelocity().set(0.0, -6.0);
-	ball.setAngularVelocity(Math.toRadians(-20.0));
-	ball.translate(1.84 * SCALING_FACTOR, -1.4 * SCALING_FACTOR);
-	world.addBody(ball);
+	Triangle t2 =
+		Geometry.createRightTriangle(2.03 * SCALING_FACTOR,
+			4.28 * SCALING_FACTOR, true);
+	t2.translate((8.0 * SCALING_FACTOR) - (2.03 * SCALING_FACTOR) / 3,
+		-(((2 * (4.28 * SCALING_FACTOR)) / 3)));
+	GameObject w2 = new GameObject();
+	w2.addFixture(t2);
+	world.addBody(w2);
+
+	createNewBall();
 
 	Triangle t3 =
 		Geometry.createIsoscelesTriangle(0.31 * SCALING_FACTOR,
@@ -649,7 +663,7 @@ public class PinballView extends JFrame implements LayoutConstants,
 	t3.translate(-0.01, 0.03);
 	HalfEllipse el1 =
 		Geometry
-		.createHalfEllipse(0.31 * SCALING_FACTOR, 0.31 * SCALING_FACTOR);
+			.createHalfEllipse(0.31 * SCALING_FACTOR, 0.31 * SCALING_FACTOR);
 	el1.translate(0.01, 0.205);
 	el1.rotate(Math.toRadians(90));
 	t3.rotate(Math.toRadians(-90));
@@ -688,16 +702,31 @@ public class PinballView extends JFrame implements LayoutConstants,
 			* SCALING_FACTOR, -12.52 * SCALING_FACTOR));
 	j1.setLimitEnabled(true);
 	j1.setReferenceAngle(Math.toRadians(0));
-	j1.setLimits(Math.toRadians(-7.2), Math.toRadians(40));
+	j1.setLimits(Math.toRadians(-7.2), Math.toRadians(50));
 	world.addJoint(j1);
 	j2 =
 		new RevoluteJoint(rightWall, right_pedal, new Vector2(
 			(5.47) * SCALING_FACTOR, -12.52 * SCALING_FACTOR));
 	j2.setLimitEnabled(true);
 	j2.setReferenceAngle(Math.toRadians(0));
-	j2.setLimits(Math.toRadians(-7.2), Math.toRadians(40));
+	j2.setLimits(Math.toRadians(-7.2), Math.toRadians(50));
 	world.addJoint(j2);
 
+  }
+
+  /**
+   * Creates a new game ball.
+   */
+  public void createNewBall() {
+	Circle c2 = new Circle(0.12 * SCALING_FACTOR);
+	ball = new GameObject();
+	ball.addFixture(c2);
+	ball.setMass();
+	ball.setGravityScale(1.0);
+	ball.getLinearVelocity().set(0.0, -6.0);
+	ball.setAngularVelocity(Math.toRadians(-20.0));
+	ball.translate(1.84 * SCALING_FACTOR, -1.4 * SCALING_FACTOR);
+	world.addBody(ball);
   }
 
   /**
@@ -727,5 +756,38 @@ public class PinballView extends JFrame implements LayoutConstants,
 	  // draw the object
 	  go.render(g);
 	}
+  }
+
+  @Override
+  public void updateScore(int score) {
+	game_score.setText(new Integer(score).toString());
+  }
+
+  @Override
+  public void updateLives(String message) {
+	game_messages.setText(message);
+  }
+
+  /**
+   *
+   */
+  public int getSaveHighscoreDialog() {
+	return JOptionPane.showConfirmDialog(this,
+		"Do you want to save your \nhighscore.", "Highscore",
+		DO_NOTHING_ON_CLOSE, JOptionPane.PLAIN_MESSAGE,
+		ViewHelper.createImageIcon(DIALOG_BALL));
+  }
+
+  public void setMessage(String message) {
+	if (message.length() > 8) {
+	  game_messages.setFont(new Font("Impact", Font.PLAIN, 20));
+	  game_messages.repaint();
+	}
+	game_messages.setText(message);
+  }
+
+  public void showMenu() {
+	CardLayout cl = (CardLayout) (cards.getLayout());
+	cl.show(cards, MENU);
   }
 }

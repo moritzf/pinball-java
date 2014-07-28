@@ -27,11 +27,17 @@ PinballModelInterface, FileConstants {
   private String[] columnNames = { "Name", "Score" };
   private File db;
   private boolean running;
+  private ScoreObserver scoreObserver;
+  private LiveObserver liveObserver;
+  private String currentMessage = "";
+  private int currentLives = 0;
 
+  @Override
   public boolean isRunning() {
 	return running;
   }
 
+  @Override
   public void setRunning(boolean running) {
 	this.running = running;
   }
@@ -48,7 +54,10 @@ PinballModelInterface, FileConstants {
   @Override
   public void clearCurrentPlayerData() {
 	currentHighscore = 0;
+	scoreChanged();
 	currentPlayer = "";
+	currentLives = 0;
+	liveChanged();
   }
 
   @Override
@@ -168,5 +177,60 @@ PinballModelInterface, FileConstants {
 	data[0] = line.substring(0, line.indexOf(':'));
 	data[1] = Integer.valueOf(line.substring(line.indexOf(':') + 1));
 	return data;
+  }
+
+  @Override
+  public void addPoints(int points) {
+	currentHighscore += points;
+	notifyScoreObserver();
+  }
+
+  /**
+   * Used to notify score observer
+   */
+  public void notifyScoreObserver() {
+	scoreObserver.updateScore(currentHighscore);
+  }
+
+  /**
+   * Called when score changes
+   */
+  public void scoreChanged() {
+	notifyScoreObserver();
+  }
+
+  /**
+   * Called when live changes
+   */
+  public void liveChanged() {
+	notifyLiveObserver();
+  }
+
+  /**
+   * Used to notify live observer
+   */
+  public void notifyLiveObserver() {
+	liveObserver.updateLives("Lives " + getLives());
+  }
+
+  @Override
+  public void addObserver(ScoreObserver scoreObserver) {
+	this.scoreObserver = scoreObserver;
+  }
+
+  @Override
+  public void addObserver(LiveObserver liveObserver) {
+	this.liveObserver = liveObserver;
+  }
+
+  @Override
+  public int getLives() {
+	return currentLives;
+  }
+
+  @Override
+  public void setLives(int i) {
+	currentLives = i;
+	liveChanged();
   }
 }

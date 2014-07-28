@@ -39,4 +39,28 @@ public interface PinballModelInterface {
    */
   public boolean isRunning();
 
+  /**
+   * Adds points to the current score
+   */
+  public void addPoints(int points);
+
+  /**
+   * Adds score observer to the model
+   */
+  public void addObserver(ScoreObserver scoreObserver);
+
+  /**
+   * Adds a message observer to the model
+   */
+  public void addObserver(LiveObserver messageObserver);
+
+  /**
+   * @return
+   */
+  public int getLives();
+
+  /**
+   * @param i
+   */
+  public void setLives(int i);
 }

@@ -29,4 +29,10 @@ public interface PinballControllerInterface {
    */
   public boolean isRunning();
 
+  /**
+   * Adds points to the current score
+   */
+  public void addPoints(int points);
+
+  public void decreaseLives();
 }
